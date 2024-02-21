@@ -1,5 +1,5 @@
 export default class Player {
     move() {
-        console.log('move');
+        console.log('move 1');
     }
 }
