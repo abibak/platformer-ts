@@ -1,6 +1,7 @@
-import Game from "./game/Game";
+import './assets/styles/app';
+import './assets/styles/variables.scss';
+import App from "./App";
 
-
-const game = new Game;
-
-console.log(game.calculateNumbers(20,5));
+document.addEventListener('DOMContentLoaded', () => {
+   const app = new App();
+});

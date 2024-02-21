@@ -9,6 +9,6 @@ export default class Game {
 
     calculateNumbers(a: number, b: number) {
         this.player.move();
-        return a + b;
+        return a * b;
     }
 }
