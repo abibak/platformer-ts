@@ -7,11 +7,9 @@ export default class EventBus {
             this._subscribes[eventType] = {};
         }
         this._subscribes[eventType][this.generateId()] = callback;
-
-        console.log(this._subscribes);
     }
 
-    public async publish(eventType: string, data: any): Promise<any> {
+    public async publish(eventType: string, data?: any): Promise<void> {
         if (!this._subscribes[eventType]) {
             return;
         }

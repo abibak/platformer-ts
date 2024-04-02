@@ -10,12 +10,12 @@ const devServer: IDevServer = {
         directory: path.join(__dirname, 'dist'),
     },
     compress: true,
-    port: process.env.port ?? 3000
+    port: process.env.port ?? 8080
 }
 
 export default (env: IEnvVariables) => {
     const config: webpack.Configuration = {
-        entry: "/src/index.ts",
+        entry: '/src/index.ts',
         mode: env.mode,
         module: {
             rules: [
@@ -27,16 +27,26 @@ export default (env: IEnvVariables) => {
                     test: /\.ts$/,
                     use: 'ts-loader',
                     exclude: /node_modules/
-                }
+                },
+                {
+                    test: /\.(png|jpe?g|gif|webp)$/i,
+                    loader: 'file-loader',
+                    options: {
+                        name: '[path][name].[ext]',
+                    },
+                },
             ]
         },
         output: {
-            filename: '[name].js',
+            filename: '[name].bundle.js',
             path: path.resolve('dist'),
             clean: true,
         },
         resolve: {
-            extensions: ['.ts', '.js', '.json', '.css', '.scss']
+            extensions: ['.ts', '.js', '.json', '.css', '.scss'],
+            alias: {
+                '@assets': path.resolve(__dirname, 'src/assets')
+            },
         },
         plugins: [
             new HtmlWebpackPlugin({
