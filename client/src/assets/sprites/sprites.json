@@ -1,0 +1,50 @@
+{
+  "frames": {
+    "player-idle": {
+      "w": 44,
+      "h": 82,
+      "xOffset": 0,
+      "yOffset": 0,
+      "move": 0,
+      "scale": 0,
+      "step": 184,
+      "framesCount": 6
+    },
+    "player-run": {
+      "w": 113,
+      "h": 82,
+      "xOffset": 0,
+      "yOffset": 0,
+      "scale": 0,
+      "step": 184,
+      "framesCount": 8
+    },
+    "player-jump": {
+      "w": 44,
+      "h": 78,
+      "xOffset": 0,
+      "yOffset": 0,
+      "scale": 0,
+      "step": 184,
+      "framesCount": 2
+    },
+    "player-fall": {
+      "w": 47,
+      "h": 76,
+      "xOffset": 0,
+      "yOffset": 0,
+      "scale": 0,
+      "step": 184,
+      "framesCount": 2
+    },
+    "player-attack": {
+      "w": 112,
+      "h": 126,
+      "xOffset": 27,
+      "yOffset": 45,
+      "scale": 0,
+      "step": 184,
+      "framesCount": 4
+    }
+  }
+}
