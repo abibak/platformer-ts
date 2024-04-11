@@ -3,7 +3,6 @@ import EventBus from "../EventBus";
 import {IPlayer} from "../types/game";
 import Canvas from "./Canvas";
 import sprite from '@assets/sprites/sprites.json';
-import {makeLogger} from "ts-loader/dist/logger";
 
 export default class Player extends Character implements IPlayer {
     private _bus: EventBus;
@@ -15,6 +14,7 @@ export default class Player extends Character implements IPlayer {
         this.y = y;
         this.width = w;
         this.height = h;
+        this.oldY = this.y;
         this.setDefaultAnimation();
     }
 
@@ -32,10 +32,12 @@ export default class Player extends Character implements IPlayer {
             this.y += this.vy;
             this.isJump = true;
         } else {
+            this.jumpQuantity = 0;
             this.isJump = false;
+            this.isFall = false;
         }
 
-        this.y += this.vy;
+        this.oldYValue = this.y;
     }
 
     /*

@@ -9,7 +9,7 @@ export default class Character extends Entity implements ICharacter {
     public isMovingRight: boolean;
     public isJump: boolean;
     public isAttack: boolean;
-    public isFall: boolean;
+    public isFall: boolean = false;
     public onGround: boolean = false;
     public isDead: boolean;
     public isFacingLeft: boolean = false;
@@ -17,12 +17,14 @@ export default class Character extends Entity implements ICharacter {
         coins: number;
     }
 
+    public jumpQuantity = 0;
+    public maxJumpQuantity = 2;
     public jumpHeight: number = 15;
     protected vy: number = 0;
-    protected gravity: number = 0.35;
+    protected gravity: number = 0.9;
     private _speed: number;
     private _maxSpeed: number;
-    private _jumpForceDecay: number = 0.25;
+    private _jumpForceDecay: number = 0;
     private _maxJumpHeight: number;
 
     protected animator: Animator;
@@ -74,13 +76,28 @@ export default class Character extends Entity implements ICharacter {
     }
 
     jump() {
-        this.vy = -this.jumpHeight;
-        this.jumpHeight -= this._jumpForceDecay;
-        this.onGround = false;
-        this.isJump = false;
+        this.jumpQuantity++;
 
+        if (this.jumpQuantity === 2) {
+            this.jumpHeight = 10;
+        }
+
+        if (this.jumpQuantity <= this.maxJumpQuantity) {
+            this.vy = -this.jumpHeight;
+            this.onGround = false;
+            this.isJump = false;
+            this.jumpHeight = 15;
+        }
     }
 
     restoreHealth() {
+    }
+
+    public set oldYValue(newValue: number) {
+        if (newValue > this.oldY) {
+            this.isFall = true;
+        }
+
+        this.oldY = newValue;
     }
 }
