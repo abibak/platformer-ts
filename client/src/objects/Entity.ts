@@ -6,6 +6,7 @@ export default class Entity implements IEntity {
     private _y: number;
     private _width: number;
     private _height: number;
+    public oldY: number = 0;
     public health: number;
     public maxHealth: number;
     public damage: number;
@@ -25,7 +26,7 @@ export default class Entity implements IEntity {
 
     public set x(value: number) {
         this._x = value;
-    };
+    }
 
     public get y() {
         return this._y;
@@ -33,7 +34,7 @@ export default class Entity implements IEntity {
 
     public set y(value: number) {
         this._y = value;
-    };
+    }
 
     public get width() {
         return this._width;
@@ -41,7 +42,7 @@ export default class Entity implements IEntity {
 
     public set width(value: number) {
         this._width = value;
-    };
+    }
 
     public get height() {
         return this._height;
@@ -49,5 +50,5 @@ export default class Entity implements IEntity {
 
     public set height(value: number) {
         this._height = value;
-    };
+    }
 }

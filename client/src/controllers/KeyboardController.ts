@@ -1,3 +1,5 @@
+import {makeLogger} from "ts-loader/dist/logger";
+
 enum Keycodes {
     Jump = 87,
     Left = 65,
@@ -6,13 +8,21 @@ enum Keycodes {
 }
 
 export default class KeyboardController {
-    public jump: boolean;
-    public left: boolean;
-    public right: boolean;
-    public down: boolean;
+    public jump: boolean = false;
+    public left: boolean = false;
+    public right: boolean = false;
+    public down: boolean = false;
+    public count: number = 0;
 
     public onKeyDown(code: number): void {
         if (code === Keycodes.Jump) {
+            this.count++;
+
+            if (this.count >= 2) {
+                this.jump = false;
+                return;
+            }
+
             this.jump = true;
         }
 
@@ -32,6 +42,7 @@ export default class KeyboardController {
     public onKeyUp(code: number): void {
         if (code === Keycodes.Jump) {
             this.jump = false;
+            this.count = 0;
         }
 
         if (code === Keycodes.Left) {

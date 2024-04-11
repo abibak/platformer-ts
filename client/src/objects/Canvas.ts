@@ -1,16 +1,18 @@
-type BackgroundProperties = { [key: string]: string | number }
+import EventBus from "../EventBus";
 
 export default class Canvas {
     public width: number;
     public height: number;
     private _canvas: HTMLCanvasElement;
     private _ctx: CanvasRenderingContext2D;
+    public xOffset: number = 0;
+    public yOffset: number = 0;
 
     public constructor() {
         this._canvas = <HTMLCanvasElement>document.getElementById('game');
 
-        this.width = 1920;
-        this.height = 920;
+        this.width = 2000;
+        this.height = 1000;
 
         if (this._canvas.getContext) {
             this._canvas.width = this.width;
@@ -20,34 +22,34 @@ export default class Canvas {
         }
     }
 
-    // Clear canvas
+    // Смещение Canvas относительно объекта центрирования
+    public translateCanvas(x: number, y: number): void {
+        this.xOffset = x;
+        this.yOffset = y;
+
+        this._ctx.save();
+        this._ctx.translate(x, y);
+    }
+
+    // Очитска Canvas
     public clearCanvas(): void {
         this._ctx.clearRect(0, 0, this.width, this.height);
     }
 
-    public drawBackground(path: string) {
-        const styles: BackgroundProperties = {
-            background: `url(${path})`,
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: 'cover',
-        }
-
-        const element: HTMLElement = document.querySelector('.wrapper');
-
-        for (const prop in styles) {
-            element.style[prop] = <string>styles[prop];
-        }
+    // Отрисовка фона
+    public drawBackground(img: HTMLImageElement) {
+        // смещение по x and y камеры, для фиксирования фона
+        this._ctx.drawImage(img, 0 - this.xOffset, 0 - this.yOffset, this.width, this.height);
     }
 
-    // Draw map method
+    // Отрисовка объектов
     public drawMap(platform): void {
         this._ctx.drawImage(platform.img, platform.x, platform.y, platform.w, platform.h);
     }
 
-    // Общая функция отрисовки объектов на canvas
+    // Общая функция отрисовки анимации на canvas
     // Добавить тип для params
     public drawAnimation(params): void {
-        this._ctx.save();
         this._ctx.scale(params.scaleX, params.scaleY);
         this._ctx.drawImage(
             params.image,

@@ -8,8 +8,9 @@
 
 body {
     font-family: sans-serif;
+    overflow: hidden;
 }
 
 #game {
-    border: 1px solid $border-color;
+    border: 1px solid #000;
 }
