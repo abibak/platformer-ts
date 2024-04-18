@@ -1,8 +1,8 @@
 import Character from "./Character";
 import EventBus from "../EventBus";
-import {IPlayer} from "../types/game";
+import {IPlayer} from "@/types/game";
 import Canvas from "./Canvas";
-import sprite from '@assets/sprites/sprites.json';
+import sprite from '@/assets/sprites/sprites.json';
 
 export default class Player extends Character implements IPlayer {
     private _bus: EventBus;
@@ -24,26 +24,21 @@ export default class Player extends Character implements IPlayer {
         const modifiedSpriteMap = this.prepareSpriteMapData(spriteMap);
 
         this.animator.setPath(getPath, modifiedSpriteMap);
-        this.animator.update(timestamp);
+        await this.animator.update(timestamp);
 
-        // Логика свободного падения
+        // Cвободное падения
         if (!this.onGround) {
             this.vy += this.gravity;
             this.y += this.vy;
-            this.isJump = true;
         } else {
             this.jumpQuantity = 0;
             this.isJump = false;
             this.isFall = false;
         }
 
-        this.oldYValue = this.y;
+        this.oldY = this.y;
     }
 
-    /*
-    * Подумать над реализацией, персонаж выходит за пределы блока, резкое смещение при смене стороны взгляда.
-    * Проработать смещение по xOffset.
-    * */
     public prepareSpriteMapData(data: any): any {
         let temp = {
             y: this.y,
@@ -53,11 +48,9 @@ export default class Player extends Character implements IPlayer {
 
         if (this.isFacingLeft) {
             data.x = -(this.x + (this.width));
-            //test.xOffset = data.w;
             temp.scaleX = -1;
         } else {
             data.x = +this.x;
-            //test.xOffset = 0;
             temp.scaleX = 1;
         }
 

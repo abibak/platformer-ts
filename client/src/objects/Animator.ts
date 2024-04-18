@@ -1,6 +1,5 @@
 import Canvas from "./Canvas";
-import idle from '../assets/images/sprites/idle.png';
-import {makeLogger} from "ts-loader/dist/logger";
+import idle from '@/assets/images/sprites/idle.png';
 
 interface RenderParams {
     image: HTMLImageElement;
@@ -110,7 +109,7 @@ export default class Animator {
         }
     }
 
-    // Рендер анимации и передача данных методу Canvas для отрисовки
+    // Рендер анимации и отрисовка анимации
     public render(params: RenderParams): void {
         this._canvas.drawAnimation(params);
     }

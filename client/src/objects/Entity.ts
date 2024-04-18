@@ -1,16 +1,18 @@
-import {IEntity} from "../types/game";
+import {IEntity} from "@/types/game";
 
 export default class Entity implements IEntity {
+    public health: number;
+    public maxHealth: number;
+    public damage: number;
+    public type;
+    public isFall: boolean;
+
     private _id: number;
     private _x: number;
     private _y: number;
     private _width: number;
     private _height: number;
-    public oldY: number = 0;
-    public health: number;
-    public maxHealth: number;
-    public damage: number;
-    public type;
+    private _oldY: number = 0;
 
     public get id() {
         return this._id;
@@ -50,5 +52,14 @@ export default class Entity implements IEntity {
 
     public set height(value: number) {
         this._height = value;
+    }
+
+    public set oldY(value: number) {
+        this.isFall = value > this._oldY;
+
+        this._oldY = value;
+    }
+
+    setFall(): void {
     }
 }

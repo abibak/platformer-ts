@@ -25,27 +25,30 @@ export default (env: IEnvVariables) => {
                 },
                 {
                     test: /\.ts$/,
-                    use: 'ts-loader',
-                    exclude: /node_modules/
+                    use: {
+                        loader: 'babel-loader',
+                        options: {
+                            presets: ['@babel/preset-env', "@babel/preset-typescript"],
+                        }
+                    },
+                    exclude: /node_modules/,
                 },
                 {
-                    test: /\.(png|jpe?g|gif|webp)$/i,
-                    loader: 'file-loader',
-                    options: {
-                        name: '[path][name].[ext]',
-                    },
-                },
+                    test: /\.(png|jpe?g|webp)$/i,
+                    type: 'asset/resource'
+                }
             ]
         },
         output: {
-            filename: '[name].bundle.js',
+            filename: '[contenthash].bundle.js',
             path: path.resolve('dist'),
+            assetModuleFilename: 'images/[contenthash][ext][query]',
             clean: true,
         },
         resolve: {
-            extensions: ['.ts', '.js', '.json', '.css', '.scss'],
+            extensions: ['.ts', '.js', '.json', '.css', '.scss', '.png'],
             alias: {
-                '@assets': path.resolve(__dirname, 'src/assets')
+                '@': path.resolve(__dirname, 'src')
             },
         },
         plugins: [
@@ -53,7 +56,7 @@ export default (env: IEnvVariables) => {
                 template: path.join(__dirname, 'src/public/index.html')
             }),
             new MiniCssExtractPlugin({
-                filename: 'styles/[name].css',
+                filename: 'styles/[contenthash].css',
             })
         ],
         devServer
