@@ -1,16 +1,28 @@
 @import "variables";
 
 * {
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: sans-serif;
-    overflow: hidden;
+  font-family: sans-serif;
+  overflow: hidden;
 }
 
 #game {
-    border: 1px solid #000;
+  border: 1px solid #000;
+}
+
+.start-game-button {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness(80%);
+  }
 }

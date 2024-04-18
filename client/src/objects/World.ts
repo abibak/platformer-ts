@@ -15,11 +15,6 @@ export default class World {
 
     private _background: HTMLImageElement = null;
 
-    private _worldSize: {width: number, height: number} = {
-        width: 0,
-        height: 0
-    }
-
     constructor(canvas: Canvas, bus: EventBus) {
         this._canvas = canvas;
         this._bus = bus;
@@ -28,8 +23,8 @@ export default class World {
 
     private async renderBackground(): Promise<void> {
         if (this._background.src === '') {
-            const path = await import('@assets/images/backgrounds/' + map['level' + this.level].background);
-            this._background.src = path.default;
+            const {default: path} = await import(/* webpackMode: "eager" */ '@/assets/images/backgrounds/' + map['level' + this.level].background);
+            this._background.src = path;
         }
 
         this._canvas.drawBackground(this._background);
@@ -50,47 +45,39 @@ export default class World {
             y: level.y,
         };
 
-        const countKeys = Object.keys(dataTextures); // Количество нумераций текстур
+        const countKeys = Object.keys(dataTextures); // Все используемые номера текстур
 
         for (let i = 0; i < countKeys.length; i++) {
             if (countKeys[i] != "0") {
                 let img: HTMLImageElement = dataTextures[countKeys[i]].image = new Image;
-                let path = await import('@assets/textures/' + dataTextures[countKeys[i]].name);
-                img.src = path.default;
+                let {default: path} = await import(/* webpackMode: "eager" */ '@/assets/textures/' + dataTextures[countKeys[i]].name);
+                img.src = path;
             }
         }
 
         await this.renderBackground();
 
-        let counter: number = 0;
-
         for (const data of dataLevel) {
-            counter++;
-
             for (const value of data) {
                 const currentTexture = dataTextures[value];
-
-                if (counter === 1) {
-
-                }
 
                 // Нулевые объекты, вне коллайдера
                 if (value === 0) {
                     toDraw.x += currentTexture.w;
+                    continue;
                 }
 
                 // Объекты коллайдер
-                if (value === 1 || value === 2 || value === 3) {
-                    let textureImg = currentTexture.image;
+                let textureImg = currentTexture.image;
 
-                    toDraw.w = currentTexture.w;
-                    toDraw.h = currentTexture.h;
-                    toDraw.x += currentTexture.w;
+                toDraw.w = currentTexture.w;
+                toDraw.h = currentTexture.h;
+                toDraw.x += currentTexture.w;
 
-                    this.setCollision(structuredClone(toDraw));
+                this.setCollision(structuredClone(toDraw));
 
-                    this._canvas.drawMap({...toDraw, img: textureImg});
-                }
+                this._canvas.drawMap({...toDraw, img: textureImg});
+
             }
 
             toDraw.x = level.x; // ширина следующего уровня, начиная с -64

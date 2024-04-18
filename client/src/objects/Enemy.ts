@@ -1,6 +1,6 @@
 import Entity from "./Entity";
-import Character from "./Character";
+import {IEnemy} from "@/types/game";
 
-export default class Enemy {
+export default class Enemy extends Entity implements IEnemy {
 
 }

@@ -19,11 +19,6 @@ export default class Camera {
         let targetX = this._target.x - (this._canvas.height / 2);
         let targetY = this._target.y - (this._canvas.height / 2);
 
-        this._bus.publish('map:changeObjectsPositions', {
-            xOffset: targetX,
-            yOffset: targetY,
-        });
-
         this._canvas.translateCanvas(-targetX, -targetY);
     }
 }

@@ -1,16 +1,15 @@
 {
   "compilerOptions": {
-    "baseUrl": "src",
+    "baseUrl": ".",
     "target": "ES6",
     "module": "ESNext",
     "outDir": "/dist/",
     "moduleResolution": "Node",
-    "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "paths": {
-      "@assets/*": ["assets/*"]
+      "@/*": ["./src/*"]
     }
   },
   "ts-node": {

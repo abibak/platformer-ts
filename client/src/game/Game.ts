@@ -8,36 +8,32 @@ import Camera from "../objects/Camera";
 
 export default class Game {
     private readonly _bus: EventBus;
-    private _player: Player;
-    private _world: World;
-    private _canvas: Canvas;
+    private readonly _players: Player[] = [];
+    private readonly _player: Player;
+    private readonly _world: World;
+    private readonly _canvas: Canvas;
     private _camera: Camera;
     private _controller: KeyboardController;
     private _mouseController: MouseController;
     private _frame;
     private _mapLayers = null;
-    private _objects = [];
     private _collisionSide: string = '';
-
-    // *** Перенести свойства в класс Player
-    public speed = 0.25;
-    public maxSpeed = 3;
-    public multiplier = 0.085;
-    public result = 0;
-
-    // ***
 
     constructor(bus: EventBus, controller: KeyboardController, mouseController: MouseController) {
         this._bus = bus;
         this._canvas = new Canvas();
         this._controller = controller;
         this._mouseController = mouseController;
-        this._player = new Player(this._bus, this._canvas, 500, 512, 35, 82);
+
+        this._player = new Player(this._bus, this._canvas, 400, 512, 35, 82);
+
+        this._players.push(new Player(this._bus, this._canvas, 100, 512, 35, 82));
+        this._players.push(this._player);
+
         this._world = new World(this._canvas, this._bus);
         this._camera = new Camera(this._player, this._canvas, this._bus);
 
         this._bus.subscribe('map:generate', this.mapCollisionLayers.bind(this));
-        this._bus.subscribe('map:changeObjectsPositions', this.processPositionsObjects.bind(this));
 
         requestAnimationFrame(this.update.bind(this));
     }
@@ -51,8 +47,8 @@ export default class Game {
 
         this._collisionSide = ''; // обнуление состояния коллизии
 
-        for (const obj of this._objects) {
-            this.collider(obj);
+        for (const obj of this._mapLayers) {
+            this.collider(this._player, obj);
         }
 
         if (this._collisionSide !== 'bottom') {
@@ -70,7 +66,12 @@ export default class Game {
     * */
     private async render(timestamp) {
         await this._world.generateMap();
+
         await this._player.update(timestamp);
+
+        // for (const player: Player of this._players) {
+        //     await player.update(timestamp);
+        // }
     }
 
     public handleCharacterActionMouse(): void {
@@ -79,65 +80,42 @@ export default class Game {
 
     // Логика передвижения персонажа и активных действий
     public handleCharacterMovement(): void {
-        if (this._controller.left || this._controller.right) {
-            if (this.speed < this.maxSpeed) {
-                this.result = (this.multiplier / this.speed);
-                this.speed += Math.pow(this.result, 1);
-            }
-        }
-
         if (this._controller.jump) {
             this._player.jump();
+            this._player.isJump = true;
             this._controller.jump = false;
             this._player.onGround = false;
         }
 
         if (this._controller.left) {
-            this._player.x -= this.speed;
+            this._player.x -= this._player.speed;
             this._player.isMovingLeft = true;
             this._player.isFacingLeft = true;
-            this._camera.offsetX += 0.5;
         } else {
             this._player.isMovingLeft = false;
         }
 
         if (this._controller.right) {
-            this._player.x += this.speed;
+            this._player.x += this._player.speed;
             this._player.isMovingRight = true;
             this._player.isFacingLeft = false;
-            this._camera.offsetX -= 0.5;
         } else {
             this._player.isMovingRight = false;
         }
-
-        if (this._controller.down) {
-            this._player.y += 3;
-        }
     }
 
-    private processPositionsObjects(data: { xOffset: number, yOffset: number }) {
-        if (this._mapLayers !== null) {
-            // this._mapLayers = this._mapLayers.map((el): {} => {
-            //     el.x -= data.xOffset;
-            //     return el;
-            // });
-
-            this._objects = this._mapLayers;
-        }
-    }
-
-    // Установка слоев коллизии
+    // Установка объектов коллизии
     public mapCollisionLayers(data: any) {
         this._mapLayers = data;
     }
 
     // Коллайдер, перенести логику в отдельный класс "Collider"
-    private collider(collisionObject: any) {
-        let dY = (this._player.y + (this._player.height / 2)) - (collisionObject.y + (collisionObject.h / 2));
-        let dX = (this._player.x + (this._player.width / 2)) - (collisionObject.x + (collisionObject.w / 2));
+    private collider(player: Player, collisionObject: any) {
+        let dY = (player.y + (player.height / 2)) - (collisionObject.y + (collisionObject.h / 2));
+        let dX = (player.x + (player.width / 2)) - (collisionObject.x + (collisionObject.w / 2));
 
-        let width = ((this._player.width / 2) + (collisionObject.w / 2));
-        let height = ((this._player.height / 2) + (collisionObject.h / 2));
+        let width = ((player.width / 2) + (collisionObject.w / 2));
+        let height = ((player.height / 2) + (collisionObject.h / 2));
 
         // detection collision all side
         if (Math.abs(dY) <= height && Math.abs(dX) <= width) {
@@ -153,7 +131,6 @@ export default class Game {
                     this._player.onGround = true;
                 }
             }
-
 
             if (Math.abs(dX) > Math.abs(dY)) {
                 if (dX <= 0) {

@@ -1,31 +1,28 @@
 import Entity from "./Entity";
-import {ICharacter} from "../types/game";
+import {ICharacter} from "@/types/game";
 import Animator from "./Animator";
 import Canvas from "./Canvas";
+import {loadImage} from "@/utils/utils";
 
 export default class Character extends Entity implements ICharacter {
     public isIdle: boolean; // фиксануть, нигде не проявляется
     public isMovingLeft: boolean;
     public isMovingRight: boolean;
-    public isJump: boolean;
     public isAttack: boolean;
-    public isFall: boolean = false;
     public onGround: boolean = false;
     public isDead: boolean;
     public isFacingLeft: boolean = false;
     public stats: {
         coins: number;
     }
-
+    public speed: number = 5;
+    public isJump: boolean = false;
     public jumpQuantity = 0;
     public maxJumpQuantity = 2;
-    public jumpHeight: number = 15;
+    public jumpHeight: number = 10;
+    public maxJumpHeight: number = 10;
     protected vy: number = 0;
-    protected gravity: number = 0.9;
-    private _speed: number;
-    private _maxSpeed: number;
-    private _jumpForceDecay: number = 0;
-    private _maxJumpHeight: number;
+    protected gravity: number = 0.4;
 
     protected animator: Animator;
     private readonly _canvas: Canvas;
@@ -37,33 +34,43 @@ export default class Character extends Entity implements ICharacter {
 
     public async getPathToSprite(): Promise<any> {
         const pathToSprite = 'images/sprites/';
-        let status = '';
+        let animation = '';
 
-        if (!(this.isMovingLeft || this.isMovingRight) && !this.isJump) {
+        if (!(this.isMovingLeft || this.isMovingRight) && !this.isJump && !this.isFall) {
             this.isIdle = true;
-            status = 'idle';
-        } else if (this.isMovingLeft || this.isMovingRight) {
-            this.isIdle = false;
-            status = 'run';
-        } else if (this.isJump) {
-            this.isIdle = false;
-            status = 'jump';
+            animation = 'idle';
+        }
+
+        if (this.isMovingLeft || this.isMovingRight) {
+            animation = 'run';
+        }
+
+        if (this.isJump) {
+            animation = 'jump';
+        }
+
+        if (this.isFall) {
+            animation = 'fall';
         }
 
         if (this.isAttack) {
-            status = 'attack';
+            animation = 'attack';
         }
 
-        let pathSprite = await import('@assets/' + pathToSprite + status + '.png');
+        const url: string = await loadImage('assets/' + pathToSprite + animation);
 
         return {
-            path: pathSprite.default,
-            status: status,
+            path: url,
+            status: animation,
         }
     }
 
     public setDefaultAnimation(): void {
         this.animator = new Animator(this._canvas);
+    }
+
+    public setFall(): void {
+
     }
 
     attack() {
@@ -79,25 +86,17 @@ export default class Character extends Entity implements ICharacter {
         this.jumpQuantity++;
 
         if (this.jumpQuantity === 2) {
-            this.jumpHeight = 10;
+            this.jumpHeight = (0.8 * this.jumpHeight);
         }
 
         if (this.jumpQuantity <= this.maxJumpQuantity) {
             this.vy = -this.jumpHeight;
             this.onGround = false;
             this.isJump = false;
-            this.jumpHeight = 15;
+            this.jumpHeight = this.maxJumpHeight;
         }
     }
 
     restoreHealth() {
-    }
-
-    public set oldYValue(newValue: number) {
-        if (newValue > this.oldY) {
-            this.isFall = true;
-        }
-
-        this.oldY = newValue;
     }
 }

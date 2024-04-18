@@ -3,8 +3,10 @@ import Socket from './Socket';
 import Game from "./game/Game";
 import KeyboardController from "./controllers/KeyboardController";
 import MouseController from "./controllers/MouseController";
+import UI from "@/ui/UI";
 
 export default class App {
+    private _ui: UI;
     private _game: Game;
     private _bus: EventBus;
     private _socket: Socket;
@@ -12,14 +14,15 @@ export default class App {
     private _mouseController: MouseController;
 
     constructor() {
+        this._bus = new EventBus;
+        this._socket = new Socket('ws://localhost:9091');
+        this._ui = new UI(this._bus);
         this.init();
     }
 
     private init() {
         this._keyboardController = new KeyboardController;
         this._mouseController = new MouseController;
-        this._socket = new Socket('ws://localhost:8080');
-        this._bus = new EventBus;
         this._game = new Game(this._bus, this._keyboardController, this._mouseController);
         this.subscribeEvents();
     }

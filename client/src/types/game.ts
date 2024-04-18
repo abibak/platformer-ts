@@ -1,5 +1,8 @@
 export interface IEntity {
     type: string;
+    isFall: boolean;
+
+    setFall(): void;
 }
 
 export interface ICharacter extends IEntity {
@@ -24,5 +27,9 @@ export interface ICharacter extends IEntity {
 }
 
 export interface IPlayer extends ICharacter {
+
+}
+
+export interface IEnemy extends IEntity {
 
 }
