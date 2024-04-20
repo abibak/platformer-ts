@@ -16,8 +16,19 @@ export default class Camera {
     }
 
     public update(): void {
-        let targetX = this._target.x - (this._canvas.height / 2);
-        let targetY = this._target.y - (this._canvas.height / 2);
+        let targetX = (this._target.x - (this._canvas.width / 2)) + (this._target.width);
+        let targetY = (this._target.y - (this._canvas.height / 2)) - this._target.height;
+
+        if (this._target.x >= this._canvas.width) {
+            this._canvas.translateCanvas(-this._canvas.width / 2, -targetY);
+            return;
+        }
+
+        if (targetX <= 0) {
+            this._canvas.translateCanvas(-0, -targetY);
+            return;
+        }
+
 
         this._canvas.translateCanvas(-targetX, -targetY);
     }

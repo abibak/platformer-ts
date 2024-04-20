@@ -25,7 +25,7 @@ export default class Game {
         this._controller = controller;
         this._mouseController = mouseController;
 
-        this._player = new Player(this._bus, this._canvas, 400, 512, 35, 82);
+        this._player = new Player(this._bus, this._canvas, 0, 512, 35, 82);
 
         this._players.push(new Player(this._bus, this._canvas, 100, 512, 35, 82));
         this._players.push(this._player);
@@ -34,7 +34,7 @@ export default class Game {
         this._camera = new Camera(this._player, this._canvas, this._bus);
 
         this._bus.subscribe('map:generate', this.mapCollisionLayers.bind(this));
-        this._bus.subscribe('toggleStateClick', this._mouseController.toggleStateClick.bind(this._mouseController));
+        this._bus.subscribe('toggleClickState', this._mouseController.toggleStateClick.bind(this._mouseController));
 
         requestAnimationFrame(this.update.bind(this));
     }
