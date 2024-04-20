@@ -69,10 +69,6 @@ export default class Character extends Entity implements ICharacter {
         this.animator = new Animator(this._canvas);
     }
 
-    public setFall(): void {
-
-    }
-
     attack() {
     }
 

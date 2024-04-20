@@ -1,7 +1,7 @@
 import Canvas from "./Canvas";
-import idle from '@/assets/images/sprites/idle.png';
+// import idle from '@/assets/images/sprites/idle.png';
 
-interface RenderParams {
+interface AnimationRenderParams {
     image: HTMLImageElement;
     scale: number;
     w: number;
@@ -16,7 +16,7 @@ interface RenderParams {
 
 export default class Animator {
     private _canvas: Canvas;
-    private _img: HTMLImageElement;
+    private readonly _img: HTMLImageElement;
     private _frameWidth: number;
     private _frameHeight: number;
     private _frameScale: number = 0;
@@ -35,14 +35,7 @@ export default class Animator {
 
     public constructor(canvas: Canvas) {
         this._canvas = canvas;
-    }
-
-    public async createImage(src: string): Promise<any> {
-        return new Promise(resolve => {
-            const img = new Image;
-            img.src = src;
-            img.onload = () => resolve(img);
-        });
+        this._img = new Image;
     }
 
     /*
@@ -63,13 +56,6 @@ export default class Animator {
     }
 
     public async update(timestamp) {
-        // Перенести блок
-        if (!this._img) {
-            await this.createImage(idle).then(img => {
-                this._img = img;
-            });
-        }
-
         if (!this._lastTime) {
             this._lastTime = timestamp;
         }
@@ -114,7 +100,7 @@ export default class Animator {
     }
 
     // Рендер анимации и отрисовка анимации
-    public render(params: RenderParams): void {
+    public render(params: AnimationRenderParams): void {
         this._canvas.drawAnimation(params);
     }
 }
