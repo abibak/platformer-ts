@@ -28,7 +28,7 @@ export default class Player extends Character implements IPlayer {
 
         if (this.animator.finish) {
             if (getPath.status === 'attack') {
-                this._bus.publish('toggleStateClick', false);
+                this._bus.publish('toggleClickState', false);
             }
         }
 
@@ -40,6 +40,7 @@ export default class Player extends Character implements IPlayer {
             this.jumpQuantity = 0;
             this.isJump = false;
             this.isFall = false;
+            this.vy = 0;
         }
 
         this.oldY = this.y;

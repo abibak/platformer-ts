@@ -5,7 +5,7 @@ import Canvas from "./Canvas";
 import {loadImage} from "@/utils/utils";
 
 export default class Character extends Entity implements ICharacter {
-    public isIdle: boolean; // фиксануть, нигде не проявляется
+    public isIdle: boolean;
     public isMovingLeft: boolean;
     public isMovingRight: boolean;
     public isAttack: boolean;
