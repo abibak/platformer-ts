@@ -8,4 +8,8 @@ export default class MouseController {
     public handleMouseEventUp(event) {
         this.click = false;
     }
+
+    public toggleStateClick(value: boolean): void {
+        this.click = value;
+    }
 }

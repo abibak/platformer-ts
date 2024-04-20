@@ -31,6 +31,8 @@ export default class Animator {
 
     private _action: string;
 
+    public finish: boolean = false;
+
     public constructor(canvas: Canvas) {
         this._canvas = canvas;
     }
@@ -52,6 +54,7 @@ export default class Animator {
         this._spriteMap = spriteMap;
 
         if (path.status !== this._action) {
+            this.finish = false;
             this._currentFrame = 0;
             this._frameScale = 0;
         }
@@ -104,6 +107,7 @@ export default class Animator {
         this._frameScale += this._spriteMap.step;
 
         if (this._currentFrame >= this._framesCount) {
+            this.finish = true;
             this._frameScale = 0;
             this._currentFrame = 0;
         }

@@ -42,9 +42,9 @@ export default class App {
             this._mouseController.handleMouseEventDown(event);
         }
 
-        if (event.type === 'mouseup' && event.which === 1) {
-            this._mouseController.handleMouseEventUp(event);
-        }
+        // if (event.type === 'mouseup' && event.which === 1) {
+        //     this._mouseController.handleMouseEventUp(event);
+        // }
     }
 
     private handleKeyboard(event): void {
