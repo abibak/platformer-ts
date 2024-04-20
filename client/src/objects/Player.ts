@@ -26,6 +26,12 @@ export default class Player extends Character implements IPlayer {
         this.animator.setPath(getPath, modifiedSpriteMap);
         await this.animator.update(timestamp);
 
+        if (this.animator.finish) {
+            if (getPath.status === 'attack') {
+                this._bus.publish('toggleStateClick', false);
+            }
+        }
+
         // Cвободное падения
         if (!this.onGround) {
             this.vy += this.gravity;

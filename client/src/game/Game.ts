@@ -21,7 +21,7 @@ export default class Game {
 
     constructor(bus: EventBus, controller: KeyboardController, mouseController: MouseController) {
         this._bus = bus;
-        this._canvas = new Canvas();
+        this._canvas = new Canvas;
         this._controller = controller;
         this._mouseController = mouseController;
 
@@ -34,6 +34,7 @@ export default class Game {
         this._camera = new Camera(this._player, this._canvas, this._bus);
 
         this._bus.subscribe('map:generate', this.mapCollisionLayers.bind(this));
+        this._bus.subscribe('toggleStateClick', this._mouseController.toggleStateClick.bind(this._mouseController));
 
         requestAnimationFrame(this.update.bind(this));
     }
@@ -66,7 +67,6 @@ export default class Game {
     * */
     private async render(timestamp) {
         await this._world.generateMap();
-
         await this._player.update(timestamp);
 
         // for (const player: Player of this._players) {
@@ -78,7 +78,7 @@ export default class Game {
         this._player.isAttack = this._mouseController.click;
     }
 
-    // Логика передвижения персонажа и активных действий
+    // Логика передвижения персонажа и действий
     public handleCharacterMovement(): void {
         if (this._controller.jump) {
             this._player.jump();
