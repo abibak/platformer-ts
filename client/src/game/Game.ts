@@ -27,11 +27,11 @@ export default class Game {
 
         this._player = new Player(this._bus, this._canvas, 0, 512, 35, 82);
 
-        this._players.push(new Player(this._bus, this._canvas, 100, 512, 35, 82));
-        this._players.push(this._player);
+        // this._players.push(new Player(this._bus, this._canvas, 100, 512, 35, 82));
+        // this._players.push(this._player);
 
         this._world = new World(this._canvas, this._bus);
-        this._camera = new Camera(this._player, this._canvas, this._bus);
+        this._camera = new Camera(this._player, this._canvas);
 
         this._bus.subscribe('map:generate', this.mapCollisionLayers.bind(this));
         this._bus.subscribe('toggleClickState', this._mouseController.toggleStateClick.bind(this._mouseController));
@@ -52,12 +52,15 @@ export default class Game {
             this.collider(this._player, obj);
         }
 
+        console.log(this._collisionSide)
+
         if (this._collisionSide !== 'bottom') {
             this._player.onGround = false;
         }
 
         this.handleCharacterActionMouse();
         this.handleCharacterMovement();
+
         this._frame = window.requestAnimationFrame(this.update.bind(this));
     }
 
@@ -87,6 +90,10 @@ export default class Game {
             this._player.onGround = false;
         }
 
+        // if (this._controller.down) {
+        //     this._player.y += 5;
+        // }
+
         if (this._controller.left) {
             this._player.x -= this._player.speed;
             this._player.isMovingLeft = true;
@@ -111,32 +118,31 @@ export default class Game {
 
     // Коллайдер, перенести логику в отдельный класс "Collider"
     private collider(player: Player, collisionObject: any) {
-        let dY = (player.y + (player.height / 2)) - (collisionObject.y + (collisionObject.h / 2));
-        let dX = (player.x + (player.width / 2)) - (collisionObject.x + (collisionObject.w / 2));
+        let dY: number = (player.y + (player.height / 2)) - (collisionObject.y + (collisionObject.h / 2));
+        let dX: number = (player.x + (player.width / 2)) - (collisionObject.x + (collisionObject.w / 2));
 
-        let width = ((player.width / 2) + (collisionObject.w / 2));
-        let height = ((player.height / 2) + (collisionObject.h / 2));
+        let width: number = (player.width / 2) + (collisionObject.w / 2);
+        let height: number = (player.height / 2) + (collisionObject.h / 2);
 
         // detection collision all side
         if (Math.abs(dY) <= height && Math.abs(dX) <= width) {
-            if (Math.abs(dY) > Math.abs(dX)) {
+            let x: number = width - Math.abs(dX);
+            let y: number = height - Math.abs(dY);
+
+            if (x >= y) {
                 if (dY > 0) {
                     this._player.y += height - Math.abs(dY); // top side
                     this._collisionSide = 'top';
-                }
-
-                if (dY < 0) {
+                } else {
                     this._player.y -= height - Math.abs(dY); // bottom side
                     this._collisionSide = 'bottom';
                     this._player.onGround = true;
                 }
-            }
-
-            if (Math.abs(dX) > Math.abs(dY)) {
+            } else {
                 if (dX <= 0) {
                     this._player.x -= width - Math.abs(dX); // right side
                     this._collisionSide = 'right';
-                } else if (dX <= width) {
+                } else {
                     this._player.x += width - Math.abs(dX); // left side
                     this._collisionSide = 'left';
                 }
