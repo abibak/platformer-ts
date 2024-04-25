@@ -4,6 +4,7 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import type {Configuration as DevServerConfiguration} from "webpack-dev-server";
 import {IEnvVariables, IDevServer} from "./src/types/config/dev-server";
+import Dotenv from "dotenv-webpack";
 
 const devServer: IDevServer = {
     static: {
@@ -50,6 +51,9 @@ export default (env: IEnvVariables) => {
             alias: {
                 '@': path.resolve(__dirname, 'src')
             },
+            fallback: {
+                process: require.resolve('process/browser'),
+            }
         },
         plugins: [
             new HtmlWebpackPlugin({
@@ -57,7 +61,8 @@ export default (env: IEnvVariables) => {
             }),
             new MiniCssExtractPlugin({
                 filename: 'styles/[contenthash].css',
-            })
+            }),
+            new Dotenv()
         ],
         devServer
     }
