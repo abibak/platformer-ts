@@ -1,0 +1,14 @@
+{
+  "frames": {
+    "idle": {
+      "w": 50,
+      "h": 44,
+      "xOffset": 0,
+      "yOffset": 0,
+      "move": 0,
+      "scale": 0,
+      "step": 90,
+      "framesCount": 9
+    }
+  }
+}

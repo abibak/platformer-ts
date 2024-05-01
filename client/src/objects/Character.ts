@@ -3,6 +3,7 @@ import {ICharacter} from "@/types/game";
 import Animator from "./Animator";
 import Canvas from "./Canvas";
 import {loadImage} from "@/utils/utils";
+import Enemy from "@/objects/Enemy";
 
 export default class Character extends Entity implements ICharacter {
     public isIdle: boolean;
@@ -17,8 +18,8 @@ export default class Character extends Entity implements ICharacter {
     }
     public speed: number = 5;
     public isJump: boolean = false;
-    public jumpQuantity = 0;
-    public maxJumpQuantity = 2;
+    public jumpQuantity: number = 0;
+    public maxJumpQuantity: number = 2;
     public jumpHeight: number = 10;
     public maxJumpHeight: number = 10;
     protected vy: number = 0;
@@ -66,7 +67,22 @@ export default class Character extends Entity implements ICharacter {
     }
 
     public setDefaultAnimation(): void {
-        this.animator = new Animator(this._canvas);
+        this.animator = new Animator(this._canvas, this.type);
+    }
+
+    public fall(): void {
+        // Cвободное падения
+        if (!this.onGround) {
+            this.vy += this.gravity;
+            this.y += this.vy;
+        } else {
+            this.jumpQuantity = 0;
+            this.isJump = false;
+            this.isFall = false;
+            this.vy = 0;
+        }
+
+        this.oldY = this.y;
     }
 
     attack() {

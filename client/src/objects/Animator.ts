@@ -1,5 +1,4 @@
 import Canvas from "./Canvas";
-// import idle from '@/assets/images/sprites/idle.png';
 
 interface AnimationRenderParams {
     image: HTMLImageElement;
@@ -12,6 +11,7 @@ interface AnimationRenderParams {
     yOffset: number;
     scaleX: number;
     scaleY: number;
+    type: string;
 }
 
 export default class Animator {
@@ -26,6 +26,8 @@ export default class Animator {
     private _frameRate: number = 10;
     private _lastTime: number = 0;
 
+    private readonly _type: string = '';
+
     private _path: string;
     private _spriteMap: any;
 
@@ -33,17 +35,18 @@ export default class Animator {
 
     public finish: boolean = false;
 
-    public constructor(canvas: Canvas) {
+    public constructor(canvas: Canvas, type: string) {
         this._canvas = canvas;
         this._img = new Image;
+        this._type = type;
     }
 
     /*
-    * path: Путь до спрайта
-    * spriteMap: Данные активного спрайта
+    * path: путь до спрайта
+    * spriteMap: данные спрайта
     * */
     public setPath(path: any, spriteMap: any): void {
-        this._path = path.path;
+        this._path = path.path ?? path;
         this._spriteMap = spriteMap;
 
         if (path.status !== this._action) {
@@ -79,6 +82,7 @@ export default class Animator {
             yOffset: this._spriteMap.yOffset,
             scaleX: this._spriteMap.scaleX,
             scaleY: this._spriteMap.scaleY,
+            type: this._type
         });
 
         if (deltaTime > 1000 / this._frameRate) {
@@ -87,8 +91,8 @@ export default class Animator {
         }
     }
 
-    // Следующий кадр
-    public nextFrame(): void {
+    // следующий кадр
+    private nextFrame(): void {
         this._currentFrame++;
         this._frameScale += this._spriteMap.step;
 
@@ -99,8 +103,8 @@ export default class Animator {
         }
     }
 
-    // Рендер анимации и отрисовка анимации
-    public render(params: AnimationRenderParams): void {
+    // рендер анимации
+    private render(params: AnimationRenderParams): void {
         this._canvas.drawAnimation(params);
     }
 }

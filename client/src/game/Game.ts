@@ -5,38 +5,46 @@ import Canvas from "../objects/Canvas";
 import KeyboardController from "../controllers/KeyboardController";
 import MouseController from "../controllers/MouseController";
 import Camera from "../objects/Camera";
+import Enemy from "@/objects/Enemy";
+import Collider from "@/objects/Collider";
 
 export default class Game {
     private readonly _bus: EventBus;
     private readonly _players: Player[] = [];
-    private readonly _player: Player;
+    private _player: Player;
     private readonly _world: World;
     private readonly _canvas: Canvas;
     private _camera: Camera;
+    private _collider: Collider;
     private _controller: KeyboardController;
     private _mouseController: MouseController;
     private _frame;
     private _mapLayers = null;
-    private _collisionSide: string = '';
+    private _entities: (Player | Enemy)[] = [];
 
     constructor(bus: EventBus, controller: KeyboardController, mouseController: MouseController) {
         this._bus = bus;
         this._canvas = new Canvas;
+        this._collider = new Collider;
         this._controller = controller;
         this._mouseController = mouseController;
-
-        this._player = new Player(this._bus, this._canvas, 0, 512, 35, 82);
-
-        // this._players.push(new Player(this._bus, this._canvas, 100, 512, 35, 82));
-        // this._players.push(this._player);
-
-        this._world = new World(this._canvas, this._bus);
-        this._camera = new Camera(this._player, this._canvas);
+        this.createPlayer();
 
         this._bus.subscribe('map:generate', this.mapCollisionLayers.bind(this));
         this._bus.subscribe('toggleClickState', this._mouseController.toggleStateClick.bind(this._mouseController));
+        this._bus.subscribe('setEnemies', (data) => {
+            this._entities.push(...data);
+        });
+
+        this._camera = new Camera(this._player, this._canvas);
+        this._world = new World(this._canvas, this._bus);
 
         requestAnimationFrame(this.update.bind(this));
+    }
+
+    public createPlayer(): void {
+        this._player = new Player(this._bus, this._canvas, 0, 512, 35, 82);
+        this._entities.push(this._player);
     }
 
     // Основной update метод
@@ -46,17 +54,15 @@ export default class Game {
         this._camera.update();
         await this.render(timestamp);
 
-        this._collisionSide = ''; // обнуление состояния коллизии
+        this._entities.forEach((entity) => {
+            entity.onGround = false;
+        });
 
-        for (const obj of this._mapLayers) {
-            this.collider(this._player, obj);
-        }
-
-        console.log(this._collisionSide)
-
-        if (this._collisionSide !== 'bottom') {
-            this._player.onGround = false;
-        }
+        this._entities.forEach((entity: Player | Enemy): void => {
+            this._mapLayers.forEach((layer) => {
+                this._collider.checkCollisionObjects(entity, layer);
+            });
+        });
 
         this.handleCharacterActionMouse();
         this.handleCharacterMovement();
@@ -69,8 +75,11 @@ export default class Game {
     * Обновление состояние игрока
     * */
     private async render(timestamp) {
-        await this._world.generateMap();
-        await this._player.update(timestamp);
+        await this._world.processMap();
+
+        await this._entities.forEach((entity: Player | Enemy): void => {
+            entity.update(timestamp);
+        });
 
         // for (const player: Player of this._players) {
         //     await player.update(timestamp);
@@ -116,37 +125,6 @@ export default class Game {
         this._mapLayers = data;
     }
 
-    // Коллайдер, перенести логику в отдельный класс "Collider"
-    private collider(player: Player, collisionObject: any) {
-        let dY: number = (player.y + (player.height / 2)) - (collisionObject.y + (collisionObject.h / 2));
-        let dX: number = (player.x + (player.width / 2)) - (collisionObject.x + (collisionObject.w / 2));
+    // Коллайдер, перенести логику в отдельный класс "Collider.ts"
 
-        let width: number = (player.width / 2) + (collisionObject.w / 2);
-        let height: number = (player.height / 2) + (collisionObject.h / 2);
-
-        // detection collision all side
-        if (Math.abs(dY) <= height && Math.abs(dX) <= width) {
-            let x: number = width - Math.abs(dX);
-            let y: number = height - Math.abs(dY);
-
-            if (x >= y) {
-                if (dY > 0) {
-                    this._player.y += height - Math.abs(dY); // top side
-                    this._collisionSide = 'top';
-                } else {
-                    this._player.y -= height - Math.abs(dY); // bottom side
-                    this._collisionSide = 'bottom';
-                    this._player.onGround = true;
-                }
-            } else {
-                if (dX <= 0) {
-                    this._player.x -= width - Math.abs(dX); // right side
-                    this._collisionSide = 'right';
-                } else {
-                    this._player.x += width - Math.abs(dX); // left side
-                    this._collisionSide = 'left';
-                }
-            }
-        }
-    }
 }
