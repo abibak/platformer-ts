@@ -1,8 +1,5 @@
 export interface IEntity {
     type: string;
-    isFall: boolean;
-
-    setFall(): void;
 }
 
 export interface ICharacter extends IEntity {
@@ -14,6 +11,7 @@ export interface ICharacter extends IEntity {
     isJump: boolean;
     damage: number;
     isDead: boolean;
+    isFall: boolean;
 
     attack(): void;
 
@@ -30,6 +28,6 @@ export interface IPlayer extends ICharacter {
 
 }
 
-export interface IEnemy extends IEntity {
+export interface IEnemy extends ICharacter {
 
 }

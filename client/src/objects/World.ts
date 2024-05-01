@@ -1,6 +1,7 @@
 import map from '../maps/map.json';
 import Canvas from "./Canvas";
 import EventBus from "../EventBus";
+import Enemy from "@/objects/Enemy";
 
 /*
 * Добавить логику импорта карты, в случае если карты нет
@@ -19,6 +20,7 @@ export default class World {
         this._canvas = canvas;
         this._bus = bus;
         this._background = new Image();
+        this.processEnemies();
     }
 
     private async renderBackground(): Promise<void> {
@@ -30,7 +32,20 @@ export default class World {
         this._canvas.drawBackground(this._background);
     }
 
-    public async generateMap() {
+    private processEnemies() {
+        const level = map['level' + this.level];
+        const objects = level.objects;
+
+        const enemies = [];
+
+        objects.forEach(object => {
+            enemies.push(new Enemy(this._bus, this._canvas, object.x, object.y, 50, 44));
+        });
+
+        this._bus.publish('setEnemies', enemies);
+    }
+
+    public async processMap(): Promise<void> {
         const level = map['level' + this.level];
         const dataLevel = map['level' + this.level].data;
         const dataTextures = level.textures;

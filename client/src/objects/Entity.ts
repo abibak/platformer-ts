@@ -4,7 +4,7 @@ export default class Entity implements IEntity {
     public health: number;
     public maxHealth: number;
     public damage: number;
-    public type;
+    public type: string;
     public isFall: boolean;
 
     private _id: number;
@@ -58,8 +58,5 @@ export default class Entity implements IEntity {
         this.isFall = value > this._oldY;
 
         this._oldY = value;
-    }
-
-    setFall(): void {
     }
 }

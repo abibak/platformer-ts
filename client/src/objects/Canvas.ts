@@ -24,6 +24,7 @@ export default class Canvas {
 
     // Смещение Canvas относительно объекта центрирования
     public translateCanvas(x: number, y: number): void {
+        // параметры xOffset и yOffset, смещение объектов относительно камеры
         this.xOffset = x;
         this.yOffset = y;
 
@@ -50,6 +51,11 @@ export default class Canvas {
     // Общая функция отрисовки анимации на canvas
     // Добавить тип для params
     public drawAnimation(params): void {
+        if (params.type !== 'player') {
+            params.x = params.x - params.xOffset + this.xOffset;
+            params.y = params.y - params.yOffset + this.yOffset;
+        }
+
         this._ctx.scale(params.scaleX, params.scaleY);
         this._ctx.drawImage(
             params.image,
@@ -64,7 +70,7 @@ export default class Canvas {
         );
         this._ctx.strokeStyle = "red";
         this._ctx.lineWidth = .2;
-        this._ctx.strokeRect(params.x, params.y - params.yOffset, params.w, params.h);
+        this._ctx.strokeRect(params.x, params.y, params.w, params.h);
         this._ctx.restore();
     }
 }

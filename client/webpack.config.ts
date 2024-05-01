@@ -6,12 +6,14 @@ import type {Configuration as DevServerConfiguration} from "webpack-dev-server";
 import {IEnvVariables, IDevServer} from "./src/types/config/dev-server";
 import Dotenv from "dotenv-webpack";
 
-const devServer: IDevServer = {
-    static: {
-        directory: path.join(__dirname, 'dist'),
-    },
-    compress: true,
-    port: process.env.port ?? 8080
+function devServer(env: any): IDevServer {
+    return {
+        static: {
+            directory: path.join(__dirname, 'dist'),
+        },
+        compress: true,
+        port: env.port ?? 8080
+    }
 }
 
 export default (env: IEnvVariables) => {
@@ -64,7 +66,7 @@ export default (env: IEnvVariables) => {
             }),
             new Dotenv()
         ],
-        devServer
+        devServer: devServer(env)
     }
     return config;
 }

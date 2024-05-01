@@ -2,13 +2,14 @@ import Character from "./Character";
 import EventBus from "../EventBus";
 import {IPlayer} from "@/types/game";
 import Canvas from "./Canvas";
-import sprite from '@/assets/sprites/sprites.json';
+import sprite from '@/assets/data-sprites/sprites.json';
 
 export default class Player extends Character implements IPlayer {
     private _bus: EventBus;
 
-    constructor(bus: EventBus, canvas: Canvas, x, y, w, h) {
+    public constructor(bus: EventBus, canvas: Canvas, x, y, w, h) {
         super(canvas);
+        this.type = 'player';
         this._bus = bus;
         this.x = x;
         this.y = y;
@@ -32,18 +33,7 @@ export default class Player extends Character implements IPlayer {
             }
         }
 
-        // Cвободное падения
-        if (!this.onGround) {
-            this.vy += this.gravity;
-            this.y += this.vy;
-        } else {
-            this.jumpQuantity = 0;
-            this.isJump = false;
-            this.isFall = false;
-            this.vy = 0;
-        }
-
-        this.oldY = this.y;
+        this.fall();
     }
 
     public prepareSpriteMapData(data: any): any {

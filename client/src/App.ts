@@ -4,6 +4,7 @@ import Game from "./game/Game";
 import KeyboardController from "./controllers/KeyboardController";
 import MouseController from "./controllers/MouseController";
 import UI from "@/ui/UI";
+import * as process from "process";
 
 export default class App {
     private _ui: UI;
@@ -15,15 +16,23 @@ export default class App {
 
     constructor() {
         this._bus = new EventBus;
-        this._socket = new Socket('ws://localhost:9091');
-        this._ui = new UI(this._bus);
-        this.init();
+        this._socket = new Socket(this._bus);
+        //this._ui = new UI(this._bus);
+
+        this._socket.connection(process.env.WSS_URL).then(() => {
+            this.init(); // временно
+            //this._ui.init();
+            this._bus.subscribe('app:start', this.start.bind(this));
+        }).catch(error => {
+            console.error('Error:', error);
+        });
     }
 
     private init() {
         this._keyboardController = new KeyboardController;
         this._mouseController = new MouseController;
         this._game = new Game(this._bus, this._keyboardController, this._mouseController);
+
         this.subscribeEvents();
     }
 
@@ -33,7 +42,6 @@ export default class App {
         document.addEventListener('keydown', this.handleKeyboard.bind(this));
         document.addEventListener('keyup', this.handleKeyboard.bind(this));
 
-        this._bus.subscribe('app:start', this.start);
         this._bus.subscribe('app:end', this.end);
     }
 
@@ -59,6 +67,7 @@ export default class App {
 
     public start() {
         console.log('START GAME');
+        this.init();
     }
 
     public end() {
