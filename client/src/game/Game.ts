@@ -7,12 +7,16 @@ import MouseController from "../controllers/MouseController";
 import Camera from "../objects/Camera";
 import Enemy from "@/objects/Enemy";
 import Collider from "@/objects/Collider";
+import Button from "@/ui/buttons/Button";
+import UI from "@/ui/UI";
+import UIElement from "@/ui/UIElement";
 
 export default class Game {
     private readonly _bus: EventBus;
+    private _ui: UI;
     private readonly _players: Player[] = [];
     private _player: Player;
-    private readonly _world: World;
+    private _world: World;
     private readonly _canvas: Canvas;
     private _camera: Camera;
     private _collider: Collider;
@@ -22,28 +26,35 @@ export default class Game {
     private _mapLayers = null;
     private _entities: (Player | Enemy)[] = [];
 
-    constructor(bus: EventBus, controller: KeyboardController, mouseController: MouseController) {
+    public constructor(bus: EventBus, ui: UI, canvas: Canvas, controller: KeyboardController, mouseController: MouseController) {
+        this._ui = ui;
         this._bus = bus;
-        this._canvas = new Canvas;
+        this._canvas = canvas;
         this._collider = new Collider;
         this._controller = controller;
         this._mouseController = mouseController;
-        this.createPlayer();
+
+        this.subscribeEvents();
+    }
+
+    private subscribeEvents(): void {
+        this._bus.subscribe('game:createPlayer',  (id: number) => {
+            this.createPlayer(id);
+            this._camera = new Camera(this._player, this._canvas);
+            this._world = new World(this._canvas, this._bus, this._player);
+
+            requestAnimationFrame(this.update.bind(this));
+        });
 
         this._bus.subscribe('map:generate', this.mapCollisionLayers.bind(this));
         this._bus.subscribe('toggleClickState', this._mouseController.toggleStateClick.bind(this._mouseController));
-        this._bus.subscribe('setEnemies', (data) => {
+        this._bus.subscribe('setEnemies', (data): void => {
             this._entities.push(...data);
         });
-
-        this._camera = new Camera(this._player, this._canvas);
-        this._world = new World(this._canvas, this._bus);
-
-        requestAnimationFrame(this.update.bind(this));
     }
 
-    public createPlayer(): void {
-        this._player = new Player(this._bus, this._canvas, 0, 512, 35, 82);
+    private createPlayer(id: number): void {
+        this._player = new Player(this._bus, this._canvas, id, 0, 512, 35, 82);
         this._entities.push(this._player);
     }
 
@@ -53,6 +64,11 @@ export default class Game {
 
         this._camera.update();
         await this.render(timestamp);
+
+        // test hp
+        if (this._player.health >= 100) {
+            //this._player.health -= 1;
+        }
 
         this._entities.forEach((entity) => {
             entity.onGround = false;
@@ -75,22 +91,19 @@ export default class Game {
     * Обновление состояние игрока
     * */
     private async render(timestamp) {
-        await this._world.processMap();
+        await this._world.update();
 
         await this._entities.forEach((entity: Player | Enemy): void => {
             entity.update(timestamp);
         });
 
-        // for (const player: Player of this._players) {
-        //     await player.update(timestamp);
-        // }
+        await this._canvas.drawHealthPlayer(this._player.health, this._player.maxHealth);
     }
 
     public handleCharacterActionMouse(): void {
         this._player.isAttack = this._mouseController.click;
     }
 
-    // Логика передвижения персонажа и действий
     public handleCharacterMovement(): void {
         if (this._controller.jump) {
             this._player.jump();
@@ -99,24 +112,16 @@ export default class Game {
             this._player.onGround = false;
         }
 
-        // if (this._controller.down) {
-        //     this._player.y += 5;
-        // }
-
         if (this._controller.left) {
-            this._player.x -= this._player.speed;
-            this._player.isMovingLeft = true;
-            this._player.isFacingLeft = true;
+            this._player.startMovingLeft();
         } else {
-            this._player.isMovingLeft = false;
+            this._player.stopMovingLeft();
         }
 
         if (this._controller.right) {
-            this._player.x += this._player.speed;
-            this._player.isMovingRight = true;
-            this._player.isFacingLeft = false;
+            this._player.startMovingRight();
         } else {
-            this._player.isMovingRight = false;
+            this._player.stopMovingRight();
         }
     }
 

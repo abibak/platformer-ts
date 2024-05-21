@@ -3,7 +3,6 @@ import {ICharacter} from "@/types/game";
 import Animator from "./Animator";
 import Canvas from "./Canvas";
 import {loadImage} from "@/utils/utils";
-import Enemy from "@/objects/Enemy";
 
 export default class Character extends Entity implements ICharacter {
     public isIdle: boolean;
@@ -22,6 +21,13 @@ export default class Character extends Entity implements ICharacter {
     public maxJumpQuantity: number = 2;
     public jumpHeight: number = 10;
     public maxJumpHeight: number = 10;
+
+    public movementPoints: {
+        length: number,
+        startX: number,
+        startY: number,
+    } = {};
+
     protected vy: number = 0;
     protected gravity: number = 0.4;
 
@@ -33,8 +39,9 @@ export default class Character extends Entity implements ICharacter {
         this._canvas = canvas;
     }
 
+    // rename to "updateAnimation"
     public async getPathToSprite(): Promise<any> {
-        const pathToSprite = 'images/sprites/';
+        const pathToSprite = 'images/sprites/player/';
         let animation = '';
 
         if (!(this.isMovingLeft || this.isMovingRight) && !this.isJump && !this.isFall) {
@@ -66,8 +73,47 @@ export default class Character extends Entity implements ICharacter {
         }
     }
 
+    // rename to "setInstanceAnimation"
     public setDefaultAnimation(): void {
         this.animator = new Animator(this._canvas, this.type);
+    }
+
+    public startMovingLeft(): void {
+        if (!this.isMovingRight) {
+            this.isMovingLeft = true;
+            this.isFacingLeft = true;
+        }
+    }
+
+    public startMovingRight(): void {
+        if (!this.isMovingLeft) {
+            this.isMovingRight = true;
+            this.isFacingLeft = false;
+        }
+    }
+
+    public stopMovingLeft(): void {
+        this.isMovingLeft = false;
+    }
+
+    public stopMovingRight(): void {
+        this.isMovingRight = false;
+    }
+
+    protected adjustVerticalMovement(): void {
+        if (this.isJump) {
+            this.jump();
+        }
+    }
+
+    protected adjustHorizontalMovement(): void {
+        if (this.isMovingLeft && !this.isAttack) {
+            this.x -= this.speed;
+        }
+
+        if (this.isMovingRight && !this.isAttack) {
+            this.x += this.speed;
+        }
     }
 
     public fall(): void {

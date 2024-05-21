@@ -1,13 +1,22 @@
 @import "variables";
 
+@font-face {
+  font-family: "Main Font";
+  src: url("@/assets/fonts/fibberish.ttf");
+  font-style: normal;
+}
+
 * {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
 }
 
 body {
-  font-family: sans-serif;
+  font-family: "Main Font", sans-serif;
   overflow: hidden;
 }
 
@@ -42,7 +51,7 @@ body {
   .main-screen {
     width: inherit;
     height: inherit;
-    background: url($main-screen-background) no-repeat;
+    //background: url($main-screen-background) no-repeat;
     background-size: cover;
     transition: transform .7s ease-in;
 
@@ -56,6 +65,8 @@ body {
       transform: translate(-50%, -50%);
 
       .start-game-button {
+        border: none;
+        outline: none;
         position: absolute;
         left: 50%;
         top: 50%;

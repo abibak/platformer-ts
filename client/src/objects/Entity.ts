@@ -1,18 +1,18 @@
 import {IEntity} from "@/types/game";
 
 export default class Entity implements IEntity {
-    public health: number;
-    public maxHealth: number;
-    public damage: number;
-    public type: string;
-    public isFall: boolean;
-
     private _id: number;
     private _x: number;
     private _y: number;
     private _width: number;
     private _height: number;
     private _oldY: number = 0;
+
+    public health: number;
+    public maxHealth: number;
+    public damage: number;
+    public type: string;
+    public isFall: boolean;
 
     public get id() {
         return this._id;

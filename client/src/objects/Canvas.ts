@@ -1,4 +1,11 @@
-import EventBus from "../EventBus";
+/* UI Button options */
+type ButtonOptions = {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    img: HTMLImageElement;
+}
 
 export default class Canvas {
     public width: number;
@@ -22,7 +29,11 @@ export default class Canvas {
         }
     }
 
-    // Смещение Canvas относительно объекта центрирования
+    public context(): CanvasRenderingContext2D {
+        return this._ctx;
+    }
+
+    // Смещение Canvas элементов относительно объекта центрирования
     public translateCanvas(x: number, y: number): void {
         // параметры xOffset и yOffset, смещение объектов относительно камеры
         this.xOffset = x;
@@ -35,6 +46,10 @@ export default class Canvas {
     // Очитска Canvas
     public clearCanvas(): void {
         this._ctx.clearRect(0, 0, this.width, this.height);
+    }
+
+    public drawUIButtonElement(options: ButtonOptions): void {
+        this._ctx.drawImage(options.img, options.x - this.xOffset, options.y - this.yOffset);
     }
 
     // Отрисовка фона
@@ -70,7 +85,23 @@ export default class Canvas {
         );
         this._ctx.strokeStyle = "red";
         this._ctx.lineWidth = .2;
-        this._ctx.strokeRect(params.x, params.y, params.w, params.h);
+        this._ctx.strokeRect(params.x - params.xOffset, params.y - params.yOffset, params.w + params.xOffset, params.h);
         this._ctx.restore();
+    }
+
+    public drawHealthPlayer(hp: number, maxHp: number): void {
+        const lineHpWidth: number = 200;
+
+        const percent: number = Math.floor(hp / maxHp * 100);
+
+        this._ctx.fillStyle = 'red';
+        this._ctx.strokeStyle = '#000';
+        this._ctx.lineWidth = 1;
+        this._ctx.fillRect(50 - this.xOffset, 50 - this.yOffset, percent * 2, 20);
+        this._ctx.strokeRect(50- this.xOffset, 50 - this.yOffset, lineHpWidth, 20);
+
+        this._ctx.fillStyle = 'green';
+        this._ctx.font = '32px Main Font';
+        this._ctx.fillText('HP ' + hp + '/' + maxHp, 50 - this.xOffset, 100 - this.yOffset);
     }
 }
