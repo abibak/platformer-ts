@@ -1,12 +1,29 @@
 import EventBus from "@/EventBus";
+import UIElement from "@/ui/UIElement";
+import Button from "@/ui/buttons/Button";
+import Canvas from "@/objects/Canvas";
 import {loadImage} from "@/utils/utils";
 
 export default class UI {
-    private _bus: EventBus;
+    private readonly _bus: EventBus;
+    private readonly _canvas: Canvas;
 
-    public constructor(bus: EventBus) {
+    public elements: UIElement[] = [];
+
+    public constructor(bus: EventBus, canvas: Canvas) {
         this._bus = bus;
-        this.createStartMenu()
+        this._canvas = canvas;
+
+        this.elements.push(new Button(
+            this._canvas,
+            200,
+            200,
+            100,
+            40,
+            'assets/ui/buttons/play/72px/play01',
+        ));
+
+        this.createStartMenu().then(() => this.init());
     }
 
     public init(): void {
@@ -15,10 +32,10 @@ export default class UI {
 
     private subscribeEvents(): void {
         const startGameButton: HTMLElement = document.querySelector('.start-game-button');
+        const mainScreenEl: HTMLElement = document.querySelector('.main-screen');
+        const screenHeight = document.documentElement.clientHeight / 2;
 
         startGameButton.addEventListener('click', (e) => {
-            const mainScreenEl: HTMLElement = document.querySelector('.main-screen');
-            const screenHeight = document.documentElement.clientHeight / 2;
             mainScreenEl.style.transform = 'scale(1.05)';
 
             document.querySelector('.upper-closing-side').style.height = screenHeight + 'px';
@@ -34,8 +51,8 @@ export default class UI {
     }
 
     private async createStartMenu() {
-        const path = await loadImage('assets/ui/buttons/play/72px/play01');
-        document.querySelector('.main-screen__menu').innerHTML += `<img src="${path}" alt="Start button" class="start-game-button">`;
+        const url = await loadImage('assets/ui/buttons/play/72px/play01');
+        document.querySelector('.main-screen__menu').innerHTML += `<img src="${url}" alt="Start button" class="start-game-button">`;
     }
 
     private hideStartMenu(): void {
@@ -44,5 +61,9 @@ export default class UI {
 
     public startGame(): void {
 
+    }
+
+    public update(): void {
+        
     }
 }

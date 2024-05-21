@@ -29,7 +29,13 @@ export default class Socket {
 
     private message(): void {
         this._connection.onmessage = (e) => {
-            //console.log(e);
+            const data = JSON.parse(e.data)
+
+            if (data.event === 'connect_player') {
+                this._bus.publish('socket:connected', {
+                    id: data.id_connection
+                });
+            }
         }
     }
 

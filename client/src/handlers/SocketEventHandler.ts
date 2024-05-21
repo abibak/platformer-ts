@@ -8,8 +8,6 @@ export default class SocketEventHandler {
     }
 
     public connection(data: any): void {
-        //console.log('Connection player', data);
-
     }
 
     public disconnect(): void {

@@ -2,6 +2,8 @@ import map from '../maps/map.json';
 import Canvas from "./Canvas";
 import EventBus from "../EventBus";
 import Enemy from "@/objects/Enemy";
+import Brain from "@/objects/Brain";
+import Player from "@/objects/Player";
 
 /*
 * Добавить логику импорта карты, в случае если карты нет
@@ -10,17 +12,31 @@ import Enemy from "@/objects/Enemy";
 export default class World {
     private _canvas: Canvas;
     private _bus: EventBus;
+    private _brain: Brain;
+    private _player: Player;
 
     public level = 1;
     public collisionObjects = [];
 
-    private _background: HTMLImageElement = null;
+    private _background: HTMLImageElement;
 
-    constructor(canvas: Canvas, bus: EventBus) {
+    constructor(canvas: Canvas, bus: EventBus, player: Player) {
         this._canvas = canvas;
         this._bus = bus;
+        this._brain = new Brain;
+        this._player = player;
         this._background = new Image();
         this.processEnemies();
+    }
+
+    public async update() {
+        await this.processMap();
+
+        this._brain.update();
+
+        // for (const player: Player of this._players) {
+        //     await player.update(timestamp);
+        // }
     }
 
     private async renderBackground(): Promise<void> {
@@ -32,21 +48,25 @@ export default class World {
         this._canvas.drawBackground(this._background);
     }
 
-    private processEnemies() {
-        const level = map['level' + this.level];
+    private processEnemies(): void {
+        const level = map['level' + this.level]; // fix
         const objects = level.objects;
 
         const enemies = [];
 
-        objects.forEach(object => {
-            enemies.push(new Enemy(this._bus, this._canvas, object.x, object.y, 50, 44));
+        objects.forEach(obj => {
+            const enemy: Enemy = new Enemy(this._bus, this._canvas, obj.x, obj.y, 50, 44);
+            enemy.movementPoints.startX = obj.x;
+            enemy.movementPoints.startY = obj.y;
+            this._brain.bindEnemy(enemy);
+            enemies.push(enemy);
         });
 
         this._bus.publish('setEnemies', enemies);
     }
 
     public async processMap(): Promise<void> {
-        const level = map['level' + this.level];
+        const level = map['level' + this.level]; // fix
         const dataLevel = map['level' + this.level].data;
         const dataTextures = level.textures;
         let lineCount = 0;

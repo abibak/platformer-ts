@@ -4,45 +4,52 @@ import Game from "./game/Game";
 import KeyboardController from "./controllers/KeyboardController";
 import MouseController from "./controllers/MouseController";
 import UI from "@/ui/UI";
-import * as process from "process";
+import Canvas from "@/objects/Canvas";
 
 export default class App {
+    private _bus: EventBus;
+    private readonly _canvas: Canvas;
     private _ui: UI;
     private _game: Game;
-    private _bus: EventBus;
     private _socket: Socket;
     private _keyboardController: KeyboardController;
     private _mouseController: MouseController;
 
-    constructor() {
+    public constructor() {
         this._bus = new EventBus;
+        this._canvas = new Canvas;
         this._socket = new Socket(this._bus);
-        //this._ui = new UI(this._bus);
+        this._keyboardController = new KeyboardController;
+        this._mouseController = new MouseController;
 
-        this._socket.connection(process.env.WSS_URL).then(() => {
-            this.init(); // временно
-            //this._ui.init();
-            this._bus.subscribe('app:start', this.start.bind(this));
-        }).catch(error => {
-            console.error('Error:', error);
-        });
+        this._bus.subscribe('app:start', this.start.bind(this));
+        this._bus.subscribe('app:end', this.end.bind(this));
+
+        // this._socket.connection(process.env.WSS_URL).then(() => {
+        //     this.subscribeEvents();
+        // }).catch(error => {
+        //     console.error('Error:', error);
+        // });
+
+        //this._ui = new UI(this._bus, this._canvas);
+        this.init();
     }
 
     private init() {
-        this._keyboardController = new KeyboardController;
-        this._mouseController = new MouseController;
-        this._game = new Game(this._bus, this._keyboardController, this._mouseController);
-
+        this._game = new Game(this._bus, this._ui, this._canvas, this._keyboardController, this._mouseController);
+        this._bus.publish('game:createPlayer', 1);
         this.subscribeEvents();
     }
 
     private subscribeEvents() {
+        this._bus.subscribe('socket:connected', (data) => {
+
+        });
+
         document.addEventListener('mousedown', this.handleInputMouse.bind(this));
         document.addEventListener('mouseup', this.handleInputMouse.bind(this));
         document.addEventListener('keydown', this.handleKeyboard.bind(this));
         document.addEventListener('keyup', this.handleKeyboard.bind(this));
-
-        this._bus.subscribe('app:end', this.end);
     }
 
     private handleInputMouse(event): void {
@@ -65,12 +72,12 @@ export default class App {
         }
     }
 
-    public start() {
+    public start(): void {
         console.log('START GAME');
         this.init();
     }
 
-    public end() {
+    public end(): void {
         console.log('END GAME!');
     }
 }

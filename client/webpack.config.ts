@@ -39,6 +39,10 @@ export default (env: IEnvVariables) => {
                 {
                     test: /\.(png|jpe?g|webp)$/i,
                     type: 'asset/resource'
+                },
+                {
+                    test: /\.ttf$/,
+                    type: 'asset/resource'
                 }
             ]
         },

@@ -7,14 +7,28 @@ import sprite from '@/assets/data-sprites/sprites.json';
 export default class Player extends Character implements IPlayer {
     private _bus: EventBus;
 
-    public constructor(bus: EventBus, canvas: Canvas, x, y, w, h) {
+    public constructor
+    (
+        bus: EventBus,
+        canvas: Canvas,
+        id: number,
+        x: number,
+        y: number,
+        w: number,
+        h: number,
+        health: number = 300,
+        maxHealth: number = 300,
+    ) {
         super(canvas);
         this.type = 'player';
         this._bus = bus;
+        this.id = id;
         this.x = x;
         this.y = y;
         this.width = w;
         this.height = h;
+        this.health = health;
+        this.maxHealth = maxHealth;
         this.oldY = this.y;
         this.setDefaultAnimation();
     }
@@ -23,6 +37,9 @@ export default class Player extends Character implements IPlayer {
         const getPath = await this.getPathToSprite(); // path to sprite
         const spriteMap = sprite.frames['player-' + getPath.status]; // data sprite
         const modifiedSpriteMap = this.prepareSpriteMapData(spriteMap);
+
+        //this.adjustVerticalMovement();
+        this.adjustHorizontalMovement();
 
         this.animator.setPath(getPath, modifiedSpriteMap);
         await this.animator.update(timestamp);
