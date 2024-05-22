@@ -1,6 +1,6 @@
 {
   "frames": {
-    "player-idle": {
+    "idle": {
       "w": 44,
       "h": 82,
       "xOffset": 0,
@@ -10,7 +10,7 @@
       "step": 184,
       "framesCount": 6
     },
-    "player-run": {
+    "run": {
       "w": 113,
       "h": 82,
       "xOffset": 0,
@@ -19,7 +19,7 @@
       "step": 184,
       "framesCount": 8
     },
-    "player-jump": {
+    "jump": {
       "w": 44,
       "h": 78,
       "xOffset": 0,
@@ -28,7 +28,7 @@
       "step": 184,
       "framesCount": 2
     },
-    "player-fall": {
+    "fall": {
       "w": 47,
       "h": 76,
       "xOffset": 0,
@@ -37,7 +37,7 @@
       "step": 184,
       "framesCount": 2
     },
-    "player-attack": {
+    "attack": {
       "w": 112,
       "h": 126,
       "xOffset": 27,

@@ -65,11 +65,6 @@ export default class Game {
         this._camera.update();
         await this.render(timestamp);
 
-        // test hp
-        if (this._player.health >= 100) {
-            //this._player.health -= 1;
-        }
-
         this._entities.forEach((entity) => {
             entity.onGround = false;
         });

@@ -31,3 +31,17 @@ export interface IPlayer extends ICharacter {
 export interface IEnemy extends ICharacter {
 
 }
+
+export interface AnimationRenderParams {
+    image: HTMLImageElement;
+    scale: number;
+    w: number;
+    h: number;
+    x: number;
+    y: number;
+    xOffset: number;
+    yOffset: number;
+    scaleX: number;
+    scaleY: number;
+    type: string;
+}
