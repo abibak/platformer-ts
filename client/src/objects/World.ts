@@ -56,8 +56,10 @@ export default class World {
 
         objects.forEach(obj => {
             const enemy: Enemy = new Enemy(this._bus, this._canvas, obj.x, obj.y, 50, 44);
+            enemy.name = obj.name;
             enemy.movementPoints.startX = obj.x;
             enemy.movementPoints.startY = obj.y;
+            enemy.movementPoints.length = 300; // movement (right | left) in px
             this._brain.bindEnemy(enemy);
             enemies.push(enemy);
         });

@@ -12,6 +12,7 @@ export default class Entity implements IEntity {
     public maxHealth: number;
     public damage: number;
     public type: string;
+    public name: string;
     public isFall: boolean;
 
     public get id() {

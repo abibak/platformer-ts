@@ -1,18 +1,5 @@
 import Canvas from "./Canvas";
-
-interface AnimationRenderParams {
-    image: HTMLImageElement;
-    scale: number;
-    w: number;
-    h: number;
-    x: number;
-    y: number;
-    xOffset: number;
-    yOffset: number;
-    scaleX: number;
-    scaleY: number;
-    type: string;
-}
+import {AnimationRenderParams} from "@/types/game";
 
 export default class Animator {
     private _canvas: Canvas;
@@ -46,7 +33,7 @@ export default class Animator {
     * spriteMap: данные спрайта
     * */
     public setPath(path: any, spriteMap: any): void {
-        this._path = path.path ?? path;
+        this._path = path.url ?? path;
         this._spriteMap = spriteMap;
 
         if (path.status !== this._action) {
