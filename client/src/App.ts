@@ -5,15 +5,17 @@ import KeyboardController from "./controllers/KeyboardController";
 import MouseController from "./controllers/MouseController";
 import UI from "@/ui/UI";
 import Canvas from "@/objects/Canvas";
+import Library from "@/library/Library";
 
 export default class App {
-    private _bus: EventBus;
     private readonly _canvas: Canvas;
+    private _bus: EventBus;
     private _ui: UI;
     private _game: Game;
     private _socket: Socket;
     private _keyboardController: KeyboardController;
     private _mouseController: MouseController;
+    private _library: Library;
 
     public constructor() {
         this._bus = new EventBus;
@@ -21,6 +23,7 @@ export default class App {
         this._socket = new Socket(this._bus);
         this._keyboardController = new KeyboardController;
         this._mouseController = new MouseController;
+        this._library = new Library;
 
         this._bus.subscribe('app:start', this.start.bind(this));
         this._bus.subscribe('app:end', this.end.bind(this));
@@ -36,7 +39,14 @@ export default class App {
     }
 
     private init() {
-        this._game = new Game(this._bus, this._ui, this._canvas, this._keyboardController, this._mouseController);
+        this._game = new Game(
+            this._library,
+            this._bus,
+            this._ui,
+            this._canvas,
+            this._keyboardController,
+            this._mouseController
+        );
         this._bus.publish('game:createPlayer', 1);
         this.subscribeEvents();
     }

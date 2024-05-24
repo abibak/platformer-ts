@@ -188,7 +188,7 @@
         "id": 1,
         "type": "enemy",
         "name": "fire-warm",
-        "x": 100,
+        "x": 300,
         "y": 512
       }
     ]

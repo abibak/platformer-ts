@@ -2,12 +2,14 @@ import Character from "./Character";
 import EventBus from "../EventBus";
 import {IPlayer} from "@/types/game";
 import Canvas from "./Canvas";
+import Library from "@/library/Library";
 
 export default class Player extends Character implements IPlayer {
     private _bus: EventBus;
 
     public constructor
     (
+        library: Library,
         bus: EventBus,
         canvas: Canvas,
         id: number,
@@ -18,7 +20,7 @@ export default class Player extends Character implements IPlayer {
         health: number = 300,
         maxHealth: number = 300,
     ) {
-        super(canvas, 'player');
+        super(canvas, library, 'player');
         this.type = 'player';
         this._bus = bus;
         this.id = id;

@@ -1,17 +1,19 @@
 import Entity from "./Entity";
-import {ICharacter} from "@/types/game";
+import {ICharacter, PlayerState} from "@/types/game";
 import Animator from "./Animator";
 import Canvas from "./Canvas";
 import {loadImage} from "@/utils/utils";
 import EventBus from "@/EventBus";
+import Library from "@/library/Library";
 
 export default class Character extends Entity implements ICharacter {
-    public isIdle: boolean;
+    public isIdle: boolean = false;
+    public isWalk: boolean = false;
     public isMovingLeft: boolean = false;
     public isMovingRight: boolean = false;
-    public isAttack: boolean;
+    public isAttack: boolean = false;
     public onGround: boolean = false;
-    public isDead: boolean;
+    public isDead: boolean = false;
     public isFacingLeft: boolean = false;
     public stats: {
         coins: number;
@@ -36,10 +38,12 @@ export default class Character extends Entity implements ICharacter {
 
     private readonly _canvas: Canvas;
     private _bus: EventBus;
+    private _library: Library;
 
-    public constructor(canvas: Canvas, type: string) {
+    public constructor(canvas: Canvas, library: Library, type: string) {
         super();
         this._canvas = canvas;
+        this._library = library;
         this.type = type;
 
         this.setDefaultAnimation();
@@ -51,7 +55,7 @@ export default class Character extends Entity implements ICharacter {
 
         let jsonDataSprite = {};
 
-        const getPath = await this.getPathToSprite(); // путь до спрайта
+        const getPath = await this.updateAnimation(); // путь до спрайта
 
         if (this.type === 'player') {
             jsonDataSprite = (await import('@/assets/data-sprites/player.json')).default;
@@ -64,12 +68,6 @@ export default class Character extends Entity implements ICharacter {
 
         this.animator.setPath(getPath, modifiedSpriteMap);
         await this.animator.update(timestamp);
-
-        if (this.animator.finish) {
-            if (getPath.status === 'attack') {
-                this._bus.publish('toggleClickState', false);
-            }
-        }
     }
 
     public prepareSpriteMapData(data: any): any {
@@ -91,7 +89,7 @@ export default class Character extends Entity implements ICharacter {
     }
 
     // rename to "updateAnimation"
-    public async getPathToSprite(): Promise<any> {
+    public async updateAnimation(): Promise<any> {
         let path: string = '';
         let animation: string = '';
 
@@ -111,7 +109,12 @@ export default class Character extends Entity implements ICharacter {
         }
 
         if (this.isMovingLeft || this.isMovingRight) {
-            animation = 'run';
+            if (this.type === 'enemy') {
+                animation = 'walk';
+            } else {
+                //this._library.sounds('player').run.play();
+                animation = 'run';
+            }
         }
 
         if (this.isJump) {
@@ -119,11 +122,29 @@ export default class Character extends Entity implements ICharacter {
         }
 
         if (this.isFall) {
-            animation = 'fall';
+            if (this.type === 'enemy') {
+                animation = 'idle';
+            } else {
+                animation = 'fall';
+            }
         }
 
         if (this.isAttack) {
             animation = 'attack';
+            this._library.sounds('player').sword_miss.play();
+        }
+
+        if (this.animator.currentFrameFinish) {
+            if (animation === 'run') {
+
+            }
+        }
+
+        if (this.animator.finish) {
+            if (animation === 'attack') {
+                this._library.sounds('player').sword_miss.finish();
+                this._bus.publish('toggleClickState', false);
+            }
         }
 
         let url: string = await loadImage('assets/' + path + animation);
@@ -136,7 +157,6 @@ export default class Character extends Entity implements ICharacter {
 
     // rename to "setInstanceAnimation"
     public setDefaultAnimation(): void {
-        console.log(this.type);
         this.animator = new Animator(this._canvas, this.type);
     }
 
@@ -201,6 +221,8 @@ export default class Character extends Entity implements ICharacter {
     }
 
     jump() {
+        this._library.sounds('player').jump.play();
+
         this.jumpQuantity++;
 
         if (this.jumpQuantity === 2) {

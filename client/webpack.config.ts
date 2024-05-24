@@ -37,19 +37,29 @@ export default (env: IEnvVariables) => {
                     exclude: /node_modules/,
                 },
                 {
-                    test: /\.(png|jpe?g|webp)$/i,
+                    test: /\.(png|jpe?g|webp|wav)$/i,
                     type: 'asset/resource'
                 },
                 {
                     test: /\.ttf$/,
-                    type: 'asset/resource'
+                    type: 'asset/resource',
+                    generator: {
+                        filename: 'assets/fonts/[contenthash][ext]'
+                    }
+                },
+                {
+                    test: /\.(mp3|wav)$/i,
+                    type: 'asset/resource',
+                    generator: {
+                        filename: 'assets/sounds/[contenthash][ext]'
+                    }
                 }
             ]
         },
         output: {
             filename: '[contenthash].bundle.js',
             path: path.resolve('dist'),
-            assetModuleFilename: 'images/[contenthash][ext][query]',
+            assetModuleFilename: 'assets/images/[contenthash][ext][query]',
             clean: true,
         },
         resolve: {
@@ -66,7 +76,7 @@ export default (env: IEnvVariables) => {
                 template: path.join(__dirname, 'src/public/index.html')
             }),
             new MiniCssExtractPlugin({
-                filename: 'styles/[contenthash].css',
+                filename: 'assets/styles/[contenthash].css',
             }),
             new Dotenv()
         ],

@@ -7,11 +7,11 @@ import MouseController from "../controllers/MouseController";
 import Camera from "../objects/Camera";
 import Enemy from "@/objects/Enemy";
 import Collider from "@/objects/Collider";
-import Button from "@/ui/buttons/Button";
 import UI from "@/ui/UI";
-import UIElement from "@/ui/UIElement";
+import Library from "@/library/Library";
 
 export default class Game {
+    private _library: Library;
     private readonly _bus: EventBus;
     private _ui: UI;
     private readonly _players: Player[] = [];
@@ -25,8 +25,17 @@ export default class Game {
     private _frame;
     private _mapLayers = null;
     private _entities: (Player | Enemy)[] = [];
+    private _gameState: string = '';
 
-    public constructor(bus: EventBus, ui: UI, canvas: Canvas, controller: KeyboardController, mouseController: MouseController) {
+    public constructor(
+        library: Library,
+        bus: EventBus,
+        ui: UI,
+        canvas: Canvas,
+        controller: KeyboardController,
+        mouseController: MouseController
+    ) {
+        this._library = library;
         this._ui = ui;
         this._bus = bus;
         this._canvas = canvas;
@@ -38,10 +47,10 @@ export default class Game {
     }
 
     private subscribeEvents(): void {
-        this._bus.subscribe('game:createPlayer',  (id: number) => {
+        this._bus.subscribe('game:createPlayer', (id: number): void => {
             this.createPlayer(id);
             this._camera = new Camera(this._player, this._canvas);
-            this._world = new World(this._canvas, this._bus, this._player);
+            this._world = new World(this._library, this._canvas, this._bus, this._player);
 
             requestAnimationFrame(this.update.bind(this));
         });
@@ -54,7 +63,7 @@ export default class Game {
     }
 
     private createPlayer(id: number): void {
-        this._player = new Player(this._bus, this._canvas, id, 0, 512, 35, 82);
+        this._player = new Player(this._library, this._bus, this._canvas, id, 0, 512, 35, 82);
         this._entities.push(this._player);
     }
 
