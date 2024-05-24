@@ -4,12 +4,14 @@ import EventBus from "../EventBus";
 import Enemy from "@/objects/Enemy";
 import Brain from "@/objects/Brain";
 import Player from "@/objects/Player";
+import Library from "@/library/Library";
 
 /*
 * Добавить логику импорта карты, в случае если карты нет
 * */
 
 export default class World {
+    private _library: Library;
     private _canvas: Canvas;
     private _bus: EventBus;
     private _brain: Brain;
@@ -20,7 +22,8 @@ export default class World {
 
     private _background: HTMLImageElement;
 
-    constructor(canvas: Canvas, bus: EventBus, player: Player) {
+    constructor(library: Library, canvas: Canvas, bus: EventBus, player: Player) {
+        this._library = library;
         this._canvas = canvas;
         this._bus = bus;
         this._brain = new Brain;
@@ -31,12 +34,7 @@ export default class World {
 
     public async update() {
         await this.processMap();
-
         this._brain.update();
-
-        // for (const player: Player of this._players) {
-        //     await player.update(timestamp);
-        // }
     }
 
     private async renderBackground(): Promise<void> {
@@ -52,17 +50,17 @@ export default class World {
         const level = map['level' + this.level]; // fix
         const objects = level.objects;
 
-        const enemies = [];
+        const enemies: Enemy[] = [];
 
-        objects.forEach(obj => {
-            const enemy: Enemy = new Enemy(this._bus, this._canvas, obj.x, obj.y, 50, 44);
-            enemy.name = obj.name;
-            enemy.movementPoints.startX = obj.x;
-            enemy.movementPoints.startY = obj.y;
-            enemy.movementPoints.length = 300; // movement (right | left) in px
-            this._brain.bindEnemy(enemy);
-            enemies.push(enemy);
-        });
+        // objects.forEach(obj => {
+        //     const enemy: Enemy = new Enemy(this._library, this._bus, this._canvas, obj.x, obj.y, 50, 44);
+        //     enemy.name = obj.name;
+        //     enemy.movementPoints.startX = obj.x;
+        //     enemy.movementPoints.startY = obj.y;
+        //     enemy.movementPoints.length = 300; // movement (right | left) in px
+        //     this._brain.bindEnemy(enemy);
+        //     enemies.push(enemy);
+        // });
 
         this._bus.publish('setEnemies', enemies);
     }
@@ -82,7 +80,7 @@ export default class World {
             y: level.y,
         };
 
-        const countKeys = Object.keys(dataTextures); // Все используемые номера текстур
+        const countKeys: string[] = Object.keys(dataTextures); // Все используемые номера текстур
 
         for (let i = 0; i < countKeys.length; i++) {
             if (countKeys[i] != "0") {

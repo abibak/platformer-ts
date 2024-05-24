@@ -18,7 +18,6 @@ export default class Brain {
 
     private processMovement(): void {
         // process
-        return;
         this._objects.forEach((obj: Character) => {
             if (obj.type === 'enemy') {
                 let limitMovement: number = (obj.movementPoints.startX - obj.x) + obj.movementPoints.length;
@@ -27,13 +26,13 @@ export default class Brain {
                     obj.startMovingRight();
                 }
 
-                if (limitMovement <= 0) {
-                    obj.stopMovingRight();
-
-                    setTimeout((): void => {
-                        obj.startMovingLeft();
-                    }, 1000)
-                }
+                // if (limitMovement <= 0) {
+                //     obj.stopMovingRight();
+                //
+                //     setTimeout((): void => {
+                //         obj.startMovingLeft();
+                //     }, 1000)
+                // }
             }
         });
     }

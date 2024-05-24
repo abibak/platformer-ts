@@ -45,3 +45,17 @@ export interface AnimationRenderParams {
     scaleY: number;
     type: string;
 }
+
+export enum PlayerState {
+    Idle,
+    Fall,
+    Run,
+    Attack,
+    Jump
+}
+
+export enum FireWarmState {
+    Idle,
+    Walk,
+    Attack
+}
