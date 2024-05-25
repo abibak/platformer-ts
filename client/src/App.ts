@@ -34,8 +34,8 @@ export default class App {
         //     console.error('Error:', error);
         // });
 
-        //this._ui = new UI(this._bus, this._canvas);
-        this.init();
+        this._ui = new UI(this._bus, this._canvas);
+        //this.init(); // temp
     }
 
     private init() {
