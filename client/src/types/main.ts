@@ -20,4 +20,5 @@ interface SoundEnemy {
 export type Sounds = {
     player: SoundEntity,
     enemies: SoundEnemy,
+    world: SoundEntity,
 };

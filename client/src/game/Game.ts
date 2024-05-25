@@ -11,13 +11,13 @@ import UI from "@/ui/UI";
 import Library from "@/library/Library";
 
 export default class Game {
-    private _library: Library;
+    private readonly _canvas: Canvas;
     private readonly _bus: EventBus;
-    private _ui: UI;
     private readonly _players: Player[] = [];
+    private readonly _library: Library;
+    private _ui: UI;
     private _player: Player;
     private _world: World;
-    private readonly _canvas: Canvas;
     private _camera: Camera;
     private _collider: Collider;
     private _controller: KeyboardController;
@@ -42,6 +42,8 @@ export default class Game {
         this._collider = new Collider;
         this._controller = controller;
         this._mouseController = mouseController;
+
+        this._library.sounds('world').light_ambient2.play();
 
         this.subscribeEvents();
     }
@@ -73,6 +75,10 @@ export default class Game {
 
         this._camera.update();
         await this.render(timestamp);
+
+        if (this._library.sounds('world').light_ambient2.ended) {
+            this._library.sounds('world').light_ambient2.replay();
+        }
 
         this._entities.forEach((entity) => {
             entity.onGround = false;

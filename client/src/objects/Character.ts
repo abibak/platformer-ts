@@ -112,7 +112,6 @@ export default class Character extends Entity implements ICharacter {
             if (this.type === 'enemy') {
                 animation = 'walk';
             } else {
-                //this._library.sounds('player').run.play();
                 animation = 'run';
             }
         }
@@ -136,7 +135,7 @@ export default class Character extends Entity implements ICharacter {
 
         if (this.animator.currentFrameFinish) {
             if (animation === 'run') {
-
+                //this._library.sounds('player').run.finish();
             }
         }
 

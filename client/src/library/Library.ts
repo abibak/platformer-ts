@@ -7,18 +7,20 @@ export default class Library implements Library {
     public constructor() {
         this._sounds = {
             player: {
-                jump: new AudioManager('jump1.wav', 0.4),
-                attack: new AudioManager('attack_sword1.mp3'),
-                run: new AudioManager('walk_stone1.mp3'),
-                hit: new AudioManager('attack_sword1.mp3'),
-                'sword_miss': new AudioManager('sword_miss1.wav', 0.4),
+                jump: new AudioManager('player/jump1.wav', 0.4),
+                attack: new AudioManager('player/attack_sword1.mp3'),
+                run: new AudioManager('player/run1.wav'),
+                hit: new AudioManager('player/attack_sword1.mp3'),
+                'sword_miss': new AudioManager('player/sword_miss1.wav', 0.3),
             },
             enemies: {
                 'fire-worm': {
-                    jump: new AudioManager('jump1.wav', 0.4),
-                    attack: new AudioManager('attack_sword1.mp3'),
-                    run: new AudioManager('attack_sword1.mp3'),
+                    jump: new AudioManager('player/jump1.wav', 0.4),
                 }
+            },
+            world: {
+                'light_ambient1': new AudioManager('world/light_ambience1.wav'),
+                'light_ambient2': new AudioManager('world/light_ambience2.wav'),
             }
         }
     }
