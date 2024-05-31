@@ -9,6 +9,8 @@ import Enemy from "@/objects/Enemy";
 import Collider from "@/objects/Collider";
 import UI from "@/ui/UI";
 import Library from "@/library/Library";
+import Collision from "@/objects/Collision";
+import {Tile} from "@/types/main";
 
 export default class Game {
     private readonly _canvas: Canvas;
@@ -23,7 +25,7 @@ export default class Game {
     private _controller: KeyboardController;
     private _mouseController: MouseController;
     private _frame;
-    private _mapLayers = null;
+    private _mapObjects = null;
     private _entities: (Player | Enemy)[] = [];
     private _gameState: string = '';
 
@@ -43,7 +45,7 @@ export default class Game {
         this._controller = controller;
         this._mouseController = mouseController;
 
-        this._library.sounds('world').light_ambient2.play();
+        //this._library.sounds('world').light_ambient2.play();
 
         this.subscribeEvents();
     }
@@ -57,11 +59,11 @@ export default class Game {
             requestAnimationFrame(this.update.bind(this));
         });
 
-        this._bus.subscribe('map:generate', this.mapCollisionLayers.bind(this));
-        this._bus.subscribe('toggleClickState', this._mouseController.toggleStateClick.bind(this._mouseController));
-        this._bus.subscribe('setEnemies', (data): void => {
-            this._entities.push(...data);
+        this._bus.subscribe('world:generated', (data: []) => {
+            this._mapObjects = data;
         });
+
+        this._bus.subscribe('toggleClickState', this._mouseController.toggleStateClick.bind(this._mouseController));
     }
 
     private createPlayer(id: number): void {
@@ -70,7 +72,7 @@ export default class Game {
     }
 
     // Основной update метод
-    private async update(timestamp) {
+    private async update(timestamp): Promise<void> {
         this._canvas.clearCanvas();
 
         this._camera.update();
@@ -80,13 +82,23 @@ export default class Game {
             this._library.sounds('world').light_ambient2.replay();
         }
 
-        this._entities.forEach((entity) => {
+        this._entities.forEach((entity: Player | Enemy): void => {
             entity.onGround = false;
         });
 
         this._entities.forEach((entity: Player | Enemy): void => {
-            this._mapLayers.forEach((layer) => {
-                this._collider.checkCollisionObjects(entity, layer);
+            // фильтрация массива коллайдеров в диапазоне 128px по x, y
+            const collideObjects = this._mapObjects.filter(obj => {
+                const dx: number = Math.abs(entity.x - obj.x),
+                    dy: number = Math.abs(entity.y - obj.y);
+
+                return dx <= 128 && dy <= 128;
+            });
+
+            collideObjects.forEach((layer): void => {
+                if (this._collider.checkColliding(entity, layer)) {
+                    Collision.handle(layer);
+                }
             });
         });
 
@@ -100,7 +112,7 @@ export default class Game {
     * Отрисовка карты
     * Обновление состояние игрока
     * */
-    private async render(timestamp) {
+    private async render(timestamp): Promise<void> {
         await this._world.update();
 
         await this._entities.forEach((entity: Player | Enemy): void => {
@@ -134,12 +146,4 @@ export default class Game {
             this._player.stopMovingRight();
         }
     }
-
-    // Установка объектов коллизии
-    public mapCollisionLayers(data: any) {
-        this._mapLayers = data;
-    }
-
-    // Коллайдер, перенести логику в отдельный класс "Collider.ts"
-
 }

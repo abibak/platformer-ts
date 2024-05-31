@@ -1,14 +1,12 @@
-import map from '../maps/map.json';
 import Canvas from "./Canvas";
 import EventBus from "../EventBus";
 import Enemy from "@/objects/Enemy";
 import Brain from "@/objects/Brain";
 import Player from "@/objects/Player";
 import Library from "@/library/Library";
-
-/*
-* Добавить логику импорта карты, в случае если карты нет
-* */
+import {Tile} from "@/types/main";
+import ImageManager from "@/library/ImageManager";
+import map from '../maps/map.json';
 
 export default class World {
     private _library: Library;
@@ -16,11 +14,10 @@ export default class World {
     private _bus: EventBus;
     private _brain: Brain;
     private _player: Player;
-
-    public level = 1;
-    public collisionObjects = [];
-
+    private _tilemap = [];
     private _background: HTMLImageElement;
+
+    public level: number = 1;
 
     constructor(library: Library, canvas: Canvas, bus: EventBus, player: Player) {
         this._library = library;
@@ -29,101 +26,80 @@ export default class World {
         this._brain = new Brain;
         this._player = player;
         this._background = new Image();
-        this.processEnemies();
+
+        Promise.all([this.processMap(), this.processEnemies()]).then((result) => {
+            this._bus.publish('world:generated', [...result[0], ...result[1]]);
+        });
     }
 
     public async update() {
-        await this.processMap();
+        this.renderBackground();
+
+        // рисование карты
+        for (const tile of this._tilemap) {
+            this._canvas.drawMap(tile);
+        }
+
         this._brain.update();
     }
 
-    private async renderBackground(): Promise<void> {
-        if (this._background.src === '') {
-            const {default: path} = await import(/* webpackMode: "eager" */ '@/assets/images/backgrounds/' + map['level' + this.level].background);
-            this._background.src = path;
-        }
-
-        this._canvas.drawBackground(this._background);
+    private renderBackground(): void {
+        this._canvas.drawBackground(this._library.images().background.image);
     }
 
-    private processEnemies(): void {
+    private async processEnemies(): Promise<Enemy[]> {
         const level = map['level' + this.level]; // fix
-        const objects = level.objects;
+        const characters = level.objects;
 
         const enemies: Enemy[] = [];
 
-        // objects.forEach(obj => {
-        //     const enemy: Enemy = new Enemy(this._library, this._bus, this._canvas, obj.x, obj.y, 50, 44);
-        //     enemy.name = obj.name;
-        //     enemy.movementPoints.startX = obj.x;
-        //     enemy.movementPoints.startY = obj.y;
-        //     enemy.movementPoints.length = 300; // movement (right | left) in px
-        //     this._brain.bindEnemy(enemy);
-        //     enemies.push(enemy);
-        // });
+        characters.forEach(obj => {
+            const enemy: Enemy = new Enemy(this._library, this._bus, this._canvas, obj.x, obj.y, 50, 44);
+            enemy.name = obj.name;
+            enemy.movementPoints.startX = obj.x;
+            enemy.movementPoints.startY = obj.y;
+            enemy.movementPoints.length = 300; // movement (right | left) in px
 
-        this._bus.publish('setEnemies', enemies);
+            this._brain.bindEnemy(enemy);
+            enemies.push(enemy);
+        });
+
+        return enemies;
     }
 
-    public async processMap(): Promise<void> {
+    public async processMap(): Promise<Tile[]> {
         const level = map['level' + this.level]; // fix
-        const dataLevel = map['level' + this.level].data;
-        const dataTextures = level.textures;
-        let lineCount = 0;
+        const mapLevelsData: [] = level.data;
 
-        this.collisionObjects = [];
+        const layers: Tile[] = [];
 
-        let toDraw = {
-            w: 0,
-            h: 0,
-            x: level.x,
-            y: level.y,
+        const tile: Tile = {
+            w: 64,
+            h: 64,
+            x: 0,
+            y: 0,
+            type: 'tile',
         };
 
-        const countKeys: string[] = Object.keys(dataTextures); // Все используемые номера текстур
-
-        for (let i = 0; i < countKeys.length; i++) {
-            if (countKeys[i] != "0") {
-                let img: HTMLImageElement = dataTextures[countKeys[i]].image = new Image;
-                let {default: path} = await import(/* webpackMode: "eager" */ '@/assets/textures/' + dataTextures[countKeys[i]].name);
-                img.src = path;
-            }
-        }
-
-        await this.renderBackground();
-
-        for (const data of dataLevel) {
-            for (const value of data) {
-                const currentTexture = dataTextures[value];
-
-                // Нулевые объекты, вне коллайдера
-                if (value === 0) {
-                    toDraw.x += currentTexture.w;
+        for (const level of mapLevelsData) {
+            for (const tileNumber of level) {
+                if (tileNumber === 0) {
+                    tile.x += 64;
                     continue;
                 }
 
-                // Объекты коллайдер
-                let textureImg = currentTexture.image;
+                const img: ImageManager = this._library.tiles()['tile_' + tileNumber];
 
-                toDraw.w = currentTexture.w;
-                toDraw.h = currentTexture.h;
-                toDraw.x += currentTexture.w;
+                this._tilemap.push({...tile, img: img.image});
+                layers.push(structuredClone(tile))
 
-                this.setCollision(structuredClone(toDraw));
-
-                this._canvas.drawMap({...toDraw, img: textureImg});
-
+                tile.x += 64;
             }
 
-            toDraw.x = level.x; // ширина следующего уровня, начиная с -64
-            toDraw.y += level.h; // высота следующего уровня
-            lineCount++; // подсчет уровней
+            tile.x = 0; // начало по x
+            tile.y += 64; // начало по y
         }
 
-        this._bus.publish('map:generate', this.collisionObjects);
-    }
-
-    public setCollision(data: any) {
-        this.collisionObjects.push(data);
+        return layers;
     }
 }
