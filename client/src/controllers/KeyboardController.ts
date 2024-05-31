@@ -1,5 +1,3 @@
-import {makeLogger} from "ts-loader/dist/logger";
-
 enum Keycodes {
     Jump = 87,
     Left = 65,

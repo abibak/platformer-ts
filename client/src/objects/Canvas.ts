@@ -98,10 +98,21 @@ export default class Canvas {
         this._ctx.strokeStyle = '#000';
         this._ctx.lineWidth = 1;
         this._ctx.fillRect(50 - this.xOffset, 50 - this.yOffset, percent * 2, 20);
-        this._ctx.strokeRect(50- this.xOffset, 50 - this.yOffset, lineHpWidth, 20);
+        this._ctx.strokeRect(50 - this.xOffset, 50 - this.yOffset, lineHpWidth, 20);
 
         this._ctx.fillStyle = 'green';
         this._ctx.font = '32px Main Font';
         this._ctx.fillText('HP ' + hp + '/' + maxHp, 50 - this.xOffset, 100 - this.yOffset);
+    }
+
+    public drawProgressLoad(progress: number): void {
+        this._ctx.strokeStyle = '#000';
+        this._ctx.lineWidth = 1;
+        this._ctx.strokeRect(300, 300, 400, 12);
+
+        setTimeout(() => {
+            this._ctx.fillStyle = 'red';
+            this._ctx.fillRect(301, 301, (progress * 4) - 2, 10);
+        }, 10);
     }
 }

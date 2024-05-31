@@ -22,3 +22,20 @@ export type Sounds = {
     enemies: SoundEnemy,
     world: SoundEntity,
 };
+
+export interface Tile {
+    w: number;
+    h: number;
+    x: number;
+    y: number;
+    type: string;
+    image?: HTMLImageElement;
+}
+
+export interface ObjectMap {
+    id: number;
+    type: string;
+    name: string;
+    x: number;
+    y: number;
+}

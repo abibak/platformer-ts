@@ -1,16 +1,27 @@
 export default class AudioManager {
-    private context: HTMLAudioElement;
-    private _dir: string = 'sounds/';
     public ended: boolean = false;
 
-    public constructor(src: string, volume: number = 1) {
-        import(/* webpackMode: "eager" */'@/assets/' + this._dir + src).then(url => {
-            this.context = new Audio;
-            this.context.src = url.default;
-            this.context.volume = volume;
+    private context: HTMLAudioElement;
+    private _dir: string = 'sounds/';
+    private _path: string = '';
 
-            this.events();
-        });
+    public constructor(path: string, volume: number = 1) {
+        this.context = new Audio;
+        this.context.volume = volume;
+        this._path = path;
+    }
+
+    public async load(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            import(/* webpackMode: "eager" */ '@/assets/' + this._dir + this._path).then(url => {
+                this.context.src = url.default;
+                this.events();
+                resolve();
+            }).catch(() => {
+                reject('Audio not found')
+            });
+        })
+
     }
 
     private events(): void {

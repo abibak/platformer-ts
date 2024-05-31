@@ -23,19 +23,30 @@ export default class App {
         this._socket = new Socket(this._bus);
         this._keyboardController = new KeyboardController;
         this._mouseController = new MouseController;
-        this._library = new Library;
+        this._library = new Library(this._canvas, this._bus);
 
-        this._bus.subscribe('app:start', this.start.bind(this));
-        this._bus.subscribe('app:end', this.end.bind(this));
+
+        this._bus.subscribe('library:loaded', () => {
+            this.init();
+
+            new Promise((resolve) => {
+                setTimeout(() => {
+                    this._canvas.clearCanvas();
+                    resolve();
+                }, 1000);
+            }).then(() => {
+                //this._ui = new UI(this._bus, this._canvas);
+                this._bus.subscribe('app:start', this.start.bind(this));
+                this._bus.subscribe('app:end', this.end.bind(this));
+            });
+        });
+
 
         // this._socket.connection(process.env.WSS_URL).then(() => {
         //     this.subscribeEvents();
         // }).catch(error => {
         //     console.error('Error:', error);
         // });
-
-        this._ui = new UI(this._bus, this._canvas);
-        //this.init(); // temp
     }
 
     private init() {
@@ -47,6 +58,7 @@ export default class App {
             this._keyboardController,
             this._mouseController
         );
+
         this._bus.publish('game:createPlayer', 1);
         this.subscribeEvents();
     }

@@ -1,34 +1,34 @@
+import Character from "@/objects/Character";
+
 export default class Collider {
-    public constructor() {
+    public checkColliding(character: Character, obj: any): boolean | void {
+        let dY: number = (character.y + (character.height / 2)) - (obj.y + (obj.h / 2));
+        let dX: number = (character.x + (character.width / 2)) - (obj.x + (obj.w / 2));
 
-    }
+        let width: number = (character.width / 2) + (obj.w / 2);
+        let height: number = (character.height / 2) + (obj.h / 2);
 
-    public async checkCollisionObjects(entity, collisionObject: any) {
-        let dY: number = (entity.y + (entity.height / 2)) - (collisionObject.y + (collisionObject.h / 2));
-        let dX: number = (entity.x + (entity.width / 2)) - (collisionObject.x + (collisionObject.w / 2));
-
-        let width: number = (entity.width / 2) + (collisionObject.w / 2);
-        let height: number = (entity.height / 2) + (collisionObject.h / 2);
-
-        // detection collision all side
+        // collision detected
         if (Math.abs(dY) <= height && Math.abs(dX) <= width) {
             let x: number = width - Math.abs(dX);
             let y: number = height - Math.abs(dY);
 
             if (x >= y) {
                 if (dY > 0) {
-                    entity.y += height - Math.abs(dY); // top side
+                    character.y += height - Math.abs(dY); // top side
                 } else {
-                    entity.y -= height - Math.abs(dY); // bottom side
-                    entity.onGround = true;
+                    character.y -= height - Math.abs(dY); // bottom side
+                    character.onGround = true;
                 }
             } else {
                 if (dX <= 0) {
-                    entity.x -= width - Math.abs(dX); // right side
+                    character.x -= width - Math.abs(dX); // right side
                 } else {
-                    entity.x += width - Math.abs(dX); // left side
+                    character.x += width - Math.abs(dX); // left side
                 }
             }
+
+            return true;
         }
     }
 }

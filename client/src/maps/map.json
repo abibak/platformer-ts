@@ -1,12 +1,12 @@
 {
   "level1": {
     "background": "background3.jpg",
-    "x": -64,
+    "x": 0,
     "y": 0,
     "w": 64,
     "h": 64,
     "nextLine": 20,
-    "textures": {
+    "tiles": {
       "0": {
         "w": 64,
         "h": 64
