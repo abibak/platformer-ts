@@ -115,4 +115,9 @@ export default class Canvas {
             this._ctx.fillRect(301, 301, (progress * 4) - 2, 10);
         }, 10);
     }
+
+    public collideobject(data) {
+        this._ctx.fillStyle = 'red';
+        this._ctx.fillRect(data.x, data.y, 64, 64);
+    }
 }

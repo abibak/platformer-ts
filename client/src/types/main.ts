@@ -1,4 +1,5 @@
 import AudioManager from "@/library/AudioManager";
+import Character from "@/objects/Character";
 
 /* Event Bus */
 type Callback = (arg?: any) => void;
@@ -23,19 +24,46 @@ export type Sounds = {
     world: SoundEntity,
 };
 
+export interface AutomatedCharacter {
+    character: Character;
+    reachedLeftBorder: boolean;
+    reachedRightBorder: boolean;
+}
+
 export interface Tile {
     w: number;
     h: number;
     x: number;
     y: number;
     type: string;
-    image?: HTMLImageElement;
+    img?: HTMLImageElement;
 }
 
-export interface ObjectMap {
+export interface CharacterMap {
     id: number;
     type: string;
     name: string;
     x: number;
     y: number;
+}
+
+export interface StructureMap {
+    [key: string]: {
+        background: string;
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+        nextLine: number;
+        tiles: {
+            [key: string]: {
+                w: number;
+                h: number;
+                name?: string;
+                image?: string;
+            }
+        };
+        data: (number)[][];
+        objects: CharacterMap[];
+    }
 }

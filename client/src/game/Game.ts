@@ -9,7 +9,8 @@ import Enemy from "@/objects/Enemy";
 import Collider from "@/objects/Collider";
 import UI from "@/ui/UI";
 import Library from "@/library/Library";
-import Collision from "@/objects/Collision";
+import CollisionHandler from "@/handlers/CollisionHandler";
+import Character from "@/objects/Character";
 import {Tile} from "@/types/main";
 
 export default class Game {
@@ -25,8 +26,8 @@ export default class Game {
     private _controller: KeyboardController;
     private _mouseController: MouseController;
     private _frame;
-    private _mapObjects = null;
-    private _entities: (Player | Enemy)[] = [];
+    private _mapObjects: (Tile | Character)[] = [];
+    private _entities: Character[] = [];
     private _gameState: string = '';
 
     public constructor(
@@ -55,12 +56,12 @@ export default class Game {
             this.createPlayer(id);
             this._camera = new Camera(this._player, this._canvas);
             this._world = new World(this._library, this._canvas, this._bus, this._player);
-
             requestAnimationFrame(this.update.bind(this));
         });
 
-        this._bus.subscribe('world:generated', (data: []) => {
-            this._mapObjects = data;
+        this._bus.subscribe('world:generated', (data: { map: Tile[], characters: Character[] }) => {
+            this._mapObjects = [...data.map, ...data.characters];
+            this._entities.push(...data.characters);
         });
 
         this._bus.subscribe('toggleClickState', this._mouseController.toggleStateClick.bind(this._mouseController));
@@ -71,7 +72,38 @@ export default class Game {
         this._entities.push(this._player);
     }
 
-    // Основной update метод
+    private handleCollision(): void {
+        this._entities.forEach((entity: Character): void => {
+            const {x: entityX, y: entityY, id: entityId, type: entityType} = entity;
+
+            // фильтрация массива в диапазоне 128px по x, y
+            const collideObjects = this._mapObjects.filter((obj: Tile | Character) => {
+                const {x: objX, y: objY, id: objId} = obj;
+                let objType: string = '';
+
+                // обозначить тип, если объект является Character
+                if (obj instanceof Character) {
+                    objType = obj.type;
+                }
+
+                // расстояние между персонажем и объектом коллизии
+                const dx: number = Math.abs(entityX - objX);
+                const dy: number = Math.abs(entityY - objY);
+
+                return entityId !== objId && entityType !== objType && dx <= 128 && dy <= 128;
+            });
+
+            // обработка коллизии
+            collideObjects.forEach((obj: Tile | Character): void => {
+                let side: string | boolean = this._collider.checkColliding(entity, obj);
+
+                if (side) {
+                    CollisionHandler.handle(entity, obj, side as string);
+                }
+            });
+        });
+    }
+
     private async update(timestamp): Promise<void> {
         this._canvas.clearCanvas();
 
@@ -86,39 +118,17 @@ export default class Game {
             entity.onGround = false;
         });
 
-        this._entities.forEach((entity: Player | Enemy): void => {
-            // фильтрация массива коллайдеров в диапазоне 128px по x, y
-            const collideObjects = this._mapObjects.filter(obj => {
-                const dx: number = Math.abs(entity.x - obj.x),
-                    dy: number = Math.abs(entity.y - obj.y);
-
-                return dx <= 128 && dy <= 128;
-            });
-
-            collideObjects.forEach((layer): void => {
-                if (this._collider.checkColliding(entity, layer)) {
-                    Collision.handle(layer);
-                }
-            });
-        });
-
-        this.handleCharacterActionMouse();
-        this.handleCharacterMovement();
-
+        await this.handleCollision();
+        await this.handleCharacterActionMouse();
+        await this.handleCharacterMovement();
         this._frame = window.requestAnimationFrame(this.update.bind(this));
     }
 
-    /*
-    * Отрисовка карты
-    * Обновление состояние игрока
-    * */
     private async render(timestamp): Promise<void> {
         await this._world.update();
-
         await this._entities.forEach((entity: Player | Enemy): void => {
             entity.update(timestamp);
         });
-
         await this._canvas.drawHealthPlayer(this._player.health, this._player.maxHealth);
     }
 

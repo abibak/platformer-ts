@@ -1,6 +1,8 @@
 import Entity from "./Entity";
 import Canvas from "./Canvas";
 
+// багулина: при движении камеры по время коллизии, не правильно отрисовывается мир
+
 export default class Camera {
     private _target: Entity;
     private _canvas: Canvas;

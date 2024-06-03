@@ -25,11 +25,15 @@ export default class Character extends Entity implements ICharacter {
     public jumpHeight: number = 10;
     public maxJumpHeight: number = 10;
 
+    // использование для класса Brain
     public movementPoints: {
         length: number,
         startX: number,
         startY: number,
     } = {};
+
+    public collisionX: string = '';
+    public collisionY: string = '';
 
     protected vy: number = 0;
     protected gravity: number = 0.4;
@@ -160,16 +164,20 @@ export default class Character extends Entity implements ICharacter {
     }
 
     public startMovingLeft(): void {
-        if (!this.isMovingRight) {
-            this.isMovingLeft = true;
-            this.isFacingLeft = true;
+        if (!this.isMovingLeft) {
+            if (!this.isMovingRight) {
+                this.isMovingLeft = true;
+                this.isFacingLeft = true;
+            }
         }
     }
 
     public startMovingRight(): void {
-        if (!this.isMovingLeft) {
-            this.isMovingRight = true;
-            this.isFacingLeft = false;
+        if (!this.isMovingRight) {
+            if (!this.isMovingLeft) {
+                this.isMovingRight = true;
+                this.isFacingLeft = false;
+            }
         }
     }
 
