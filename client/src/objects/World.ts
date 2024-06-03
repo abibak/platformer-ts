@@ -4,9 +4,10 @@ import Enemy from "@/objects/Enemy";
 import Brain from "@/objects/Brain";
 import Player from "@/objects/Player";
 import Library from "@/library/Library";
-import {Tile} from "@/types/main";
+import {StructureMap, Tile} from "@/types/main";
 import ImageManager from "@/library/ImageManager";
 import map from '../maps/map.json';
+import Character from "@/objects/Character";
 
 export default class World {
     private _library: Library;
@@ -14,8 +15,10 @@ export default class World {
     private _bus: EventBus;
     private _brain: Brain;
     private _player: Player;
-    private _tilemap = [];
+    private _tilemap: Tile[] = [];
+    private _characters: Character[] = [];
     private _background: HTMLImageElement;
+    private _mapJson: StructureMap;
 
     public level: number = 1;
 
@@ -26,19 +29,23 @@ export default class World {
         this._brain = new Brain;
         this._player = player;
         this._background = new Image();
+        this._mapJson = map;
 
-        Promise.all([this.processMap(), this.processEnemies()]).then((result) => {
-            this._bus.publish('world:generated', [...result[0], ...result[1]]);
+        Promise.all([this.processMap(), this.processEnemies()]).then(() => {
+            this._bus.publish('world:generated', {
+                map: this._tilemap,
+                characters: this._characters,
+            });
         });
     }
 
     public async update() {
         this.renderBackground();
 
-        // рисование карты
-        for (const tile of this._tilemap) {
+        // отрисовка карты
+        this._tilemap.forEach((tile: Tile) => {
             this._canvas.drawMap(tile);
-        }
+        });
 
         this._brain.update();
     }
@@ -51,27 +58,22 @@ export default class World {
         const level = map['level' + this.level]; // fix
         const characters = level.objects;
 
-        const enemies: Enemy[] = [];
-
         characters.forEach(obj => {
             const enemy: Enemy = new Enemy(this._library, this._bus, this._canvas, obj.x, obj.y, 50, 44);
+            enemy.id = obj.id;
             enemy.name = obj.name;
             enemy.movementPoints.startX = obj.x;
             enemy.movementPoints.startY = obj.y;
-            enemy.movementPoints.length = 300; // movement (right | left) in px
+            enemy.movementPoints.length = 150; // movement (right | left) in px
 
             this._brain.bindEnemy(enemy);
-            enemies.push(enemy);
+            this._characters.push(enemy);
         });
-
-        return enemies;
     }
 
     public async processMap(): Promise<Tile[]> {
         const level = map['level' + this.level]; // fix
         const mapLevelsData: [] = level.data;
-
-        const layers: Tile[] = [];
 
         const tile: Tile = {
             w: 64,
@@ -82,7 +84,7 @@ export default class World {
         };
 
         for (const level of mapLevelsData) {
-            for (const tileNumber of level) {
+            for (const tileNumber: number of level) {
                 if (tileNumber === 0) {
                     tile.x += 64;
                     continue;
@@ -91,15 +93,11 @@ export default class World {
                 const img: ImageManager = this._library.tiles()['tile_' + tileNumber];
 
                 this._tilemap.push({...tile, img: img.image});
-                layers.push(structuredClone(tile))
-
                 tile.x += 64;
             }
 
             tile.x = 0; // начало по x
             tile.y += 64; // начало по y
         }
-
-        return layers;
     }
 }
