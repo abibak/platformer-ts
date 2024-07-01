@@ -52,6 +52,21 @@ export default class Canvas {
         this._ctx.drawImage(options.img, options.x - this.xOffset, options.y - this.yOffset);
     }
 
+    public drawCustomButton(props) {
+        this._ctx.fillStyle = props.color;
+        this._ctx.fillRect(props.x, props.y, props.w, props.h);
+
+        //this._ctx.fillStyle = '#fff';
+        this._ctx.font = '32px Main Font';
+
+        const size: TextMetrics = this._ctx.measureText(props.text)
+
+        const textX = props.x + (props.w - size.width) / 2;
+        console.log(textX);
+
+        this._ctx.fillText(props.label, textX, props.y)
+    }
+
     // Отрисовка фона
     public drawBackground(img: HTMLImageElement) {
         // смещение по x and y камеры, для фиксирования фона
@@ -83,6 +98,7 @@ export default class Canvas {
             params.w + params.xOffset,
             params.h
         );
+
         this._ctx.strokeStyle = "red";
         this._ctx.lineWidth = .2;
         this._ctx.strokeRect(params.x - params.xOffset, params.y - params.yOffset, params.w + params.xOffset, params.h);
@@ -105,6 +121,15 @@ export default class Canvas {
         this._ctx.fillText('HP ' + hp + '/' + maxHp, 50 - this.xOffset, 100 - this.yOffset);
     }
 
+    public drawHealthEnemy(data: any): void {
+        this._ctx.strokeStyle = '#000';
+        this._ctx.lineWidth = 1.1;
+        this._ctx.strokeRect(data.x, data.y - 10, 50, 3);
+
+        this._ctx.fillStyle = 'red';
+        this._ctx.fillRect(data.x, data.y - 10, data.hp, 3);
+    }
+
     public drawProgressLoad(progress: number): void {
         this._ctx.strokeStyle = '#000';
         this._ctx.lineWidth = 1;
@@ -114,10 +139,5 @@ export default class Canvas {
             this._ctx.fillStyle = 'red';
             this._ctx.fillRect(301, 301, (progress * 4) - 2, 10);
         }, 10);
-    }
-
-    public collideobject(data) {
-        this._ctx.fillStyle = 'red';
-        this._ctx.fillRect(data.x, data.y, 64, 64);
     }
 }

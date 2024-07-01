@@ -1,21 +1,17 @@
 {
-  "name": "Player",
+  "id": 1,
+  "name": "",
+  "type": "player",
+  "w": 35,
+  "h": 82,
   "x": 0,
-  "y": 0,
-  "width": 34,
-  "height": 82,
-  "speed": 4,
-  "maxSpeed": 4,
+  "y": 512,
+  "speed": 5,
+  "maxJumpQuantity": 2,
+  "jumpHeight": 10,
+  "maxJumpHeight": 10,
   "health": 100,
-  "maxHealth": 100,
-  "gravity": 0.06,
-  "jumpHeight": 2.5,
-  "maxJumpHeight": 2.5,
-  "jumpForceDecay": 0.1,
-  "onGround": false,
-  "attack": 4,
-  "isDead": false,
-  "stats": {
-    "coins": 0
-  }
+  "maxHealth": 300,
+  "damage": 40,
+  "restoreHealth": 1.5
 }

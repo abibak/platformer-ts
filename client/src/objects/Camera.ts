@@ -12,7 +12,7 @@ export default class Camera {
         this._canvas = canvas;
     }
 
-    public update(): void {
+    public async update(): Promise<void> {
         let targetX: number = (this._target.x - (this._canvas.width / 2)) + this._target.width;
         let targetY: number = (this._target.y - (this._canvas.height / 2)) - this._target.height;
 

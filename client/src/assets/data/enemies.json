@@ -1,0 +1,12 @@
+{
+  "fire-warm": {
+    "type": "enemy",
+    "name": "fire-warm",
+    "w": 50,
+    "h": 44,
+    "speed": 5,
+    "health": 50,
+    "maxHealth": 50,
+    "damage": 40
+  }
+}

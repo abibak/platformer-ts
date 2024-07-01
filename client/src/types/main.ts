@@ -28,6 +28,8 @@ export interface AutomatedCharacter {
     character: Character;
     reachedLeftBorder: boolean;
     reachedRightBorder: boolean;
+    targetSide: string;
+    target?: Character;
 }
 
 export interface Tile {
@@ -67,3 +69,20 @@ export interface StructureMap {
         objects: CharacterMap[];
     }
 }
+
+export interface Sprite {
+    w: number;
+    h: number;
+    xOffset: number;
+    yOffset: number;
+    scale?: number;
+    step?: number;
+    frameCount: number;
+}
+
+export interface SpriteList {
+    frames: {
+        [key: string]: Sprite;
+    }
+}
+

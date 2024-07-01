@@ -12,11 +12,11 @@ import Library from "@/library/Library";
 import CollisionHandler from "@/handlers/CollisionHandler";
 import Character from "@/objects/Character";
 import {Tile} from "@/types/main";
+import playerConfig from "@/assets/data/player.json";
 
 export default class Game {
     private readonly _canvas: Canvas;
     private readonly _bus: EventBus;
-    private readonly _players: Player[] = [];
     private readonly _library: Library;
     private _ui: UI;
     private _player: Player;
@@ -46,34 +46,48 @@ export default class Game {
         this._controller = controller;
         this._mouseController = mouseController;
 
-        //this._library.sounds('world').light_ambient2.play();
-
-        this.subscribeEvents();
-    }
-
-    private subscribeEvents(): void {
-        this._bus.subscribe('game:createPlayer', (id: number): void => {
-            this.createPlayer(id);
-            this._camera = new Camera(this._player, this._canvas);
-            this._world = new World(this._library, this._canvas, this._bus, this._player);
+        this.createPlayer().then((player: Player): void => {
+            this._player = player;
+            this.subscribeEvents();
             requestAnimationFrame(this.update.bind(this));
         });
 
-        this._bus.subscribe('world:generated', (data: { map: Tile[], characters: Character[] }) => {
+        //this._library.sounds('world').light_ambient2.play();
+    }
+
+    private subscribeEvents(): void {
+        this._camera = new Camera(this._player, this._canvas);
+        this._world = new World(this._library, this._canvas, this._bus, this._player);
+
+        this._bus.subscribe('world:generated', (data: { map: Tile[], characters: Character[] }): void => {
             this._mapObjects = [...data.map, ...data.characters];
             this._entities.push(...data.characters);
         });
 
         this._bus.subscribe('toggleClickState', this._mouseController.toggleStateClick.bind(this._mouseController));
+        this._bus.subscribe('game:filterEntities', () => this._entities = this.filterAliveCharacters(this._entities));
+        this._bus.subscribe('game:filterColliders', () => this._mapObjects = this.filterAliveCharacters(this._mapObjects));
+        this._bus.subscribe('player:attack', (): void => {
+            if (!this._player.isAttack) {
+                this._player.attack();
+            }
+        });
     }
 
-    private createPlayer(id: number): void {
-        this._player = new Player(this._library, this._bus, this._canvas, id, 0, 512, 35, 82);
-        this._entities.push(this._player);
+    private createPlayer(): Promise<Player> {
+        return new Promise((resolve): void => {
+            const player: Player = new Player(
+                this._library, this._bus, this._canvas, playerConfig, this._entities
+            );
+
+            this._entities.push(player);
+            resolve(player)
+        })
     }
 
     private handleCollision(): void {
         this._entities.forEach((entity: Character): void => {
+
             const {x: entityX, y: entityY, id: entityId, type: entityType} = entity;
 
             // фильтрация массива в диапазоне 128px по x, y
@@ -81,7 +95,7 @@ export default class Game {
                 const {x: objX, y: objY, id: objId} = obj;
                 let objType: string = '';
 
-                // обозначить тип, если объект является Character
+                // установить тип, если объект является Character
                 if (obj instanceof Character) {
                     objType = obj.type;
                 }
@@ -95,6 +109,7 @@ export default class Game {
 
             // обработка коллизии
             collideObjects.forEach((obj: Tile | Character): void => {
+                // получить сторону коллизии или же false
                 let side: string | boolean = this._collider.checkColliding(entity, obj);
 
                 if (side) {
@@ -107,7 +122,7 @@ export default class Game {
     private async update(timestamp): Promise<void> {
         this._canvas.clearCanvas();
 
-        this._camera.update();
+        await this._camera.update();
         await this.render(timestamp);
 
         if (this._library.sounds('world').light_ambient2.ended) {
@@ -156,4 +171,31 @@ export default class Game {
             this._player.stopMovingRight();
         }
     }
+
+
+    private filterAliveCharacters(obj): Character[] {
+        return obj.filter(item => {
+            if (item instanceof Character) {
+                return !item.isDead;
+            }
+
+            return true;
+        });
+    }
+
+    // private filterAliveCollideCharacters(): void {
+    //     this._mapObjects = this._mapObjects.filter((obj: Tile | Character): boolean | Tile => {
+    //         if (obj instanceof Character) {
+    //             return !obj.isDead;
+    //         }
+    //
+    //         return obj;
+    //     });
+    // }
+    //
+    // private filterAliveCharacters(): void {
+    //     this._entities = this._entities.filter((entity: Character) => {
+    //         return !entity.isDead;
+    //     });
+    // }
 }
