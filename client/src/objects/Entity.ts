@@ -57,7 +57,6 @@ export default class Entity implements IEntity {
 
     public set oldY(value: number) {
         this.isFall = value > this._oldY;
-
         this._oldY = value;
     }
 }

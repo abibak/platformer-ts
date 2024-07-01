@@ -4,10 +4,11 @@ import Enemy from "@/objects/Enemy";
 import Brain from "@/objects/Brain";
 import Player from "@/objects/Player";
 import Library from "@/library/Library";
-import {StructureMap, Tile} from "@/types/main";
+import {CharacterMap, StructureMap, Tile} from "@/types/main";
 import ImageManager from "@/library/ImageManager";
 import map from '../maps/map.json';
 import Character from "@/objects/Character";
+import enemies from "@/assets/data/enemies.json";
 
 export default class World {
     private _library: Library;
@@ -26,7 +27,7 @@ export default class World {
         this._library = library;
         this._canvas = canvas;
         this._bus = bus;
-        this._brain = new Brain;
+        this._brain = new Brain(this._canvas, [player]);
         this._player = player;
         this._background = new Image();
         this._mapJson = map;
@@ -41,13 +42,12 @@ export default class World {
 
     public async update() {
         this.renderBackground();
+        await this._brain.update();
 
         // отрисовка карты
         this._tilemap.forEach((tile: Tile) => {
             this._canvas.drawMap(tile);
         });
-
-        this._brain.update();
     }
 
     private renderBackground(): void {
@@ -56,10 +56,11 @@ export default class World {
 
     private async processEnemies(): Promise<Enemy[]> {
         const level = map['level' + this.level]; // fix
-        const characters = level.objects;
+        const characters: CharacterMap[] = level.objects;
 
-        characters.forEach(obj => {
-            const enemy: Enemy = new Enemy(this._library, this._bus, this._canvas, obj.x, obj.y, 50, 44);
+        characters.forEach((obj: CharacterMap): void => {
+            const config = enemies[obj.name];
+            const enemy: Enemy = new Enemy(this._library, this._bus, this._canvas, {...config, x: obj.x, y: obj.y});
             enemy.id = obj.id;
             enemy.name = obj.name;
             enemy.movementPoints.startX = obj.x;

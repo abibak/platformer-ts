@@ -14,22 +14,19 @@ export interface ICharacter extends IEntity {
     isFall: boolean;
 
     attack(): void;
-
-    restoreHealth(): void;
+    attack(attacked: ICharacter): void
 
     jump(): void;
 
-    getHurt(): void;
+    getHurt(damage: number): void;
 
     dead(): void;
 }
 
 export interface IPlayer extends ICharacter {
-
 }
 
 export interface IEnemy extends ICharacter {
-
 }
 
 export interface AnimationRenderParams {
@@ -44,6 +41,24 @@ export interface AnimationRenderParams {
     scaleX: number;
     scaleY: number;
     type: string;
+}
+
+export interface PlayerConfig {
+    id: number;
+    name: string;
+    type: string;
+    x: number;
+    y: number;
+    h: number;
+    w: number;
+    speed: number;
+    maxJumpQuantity: number;
+    jumpHeight: number;
+    maxJumpHeight: number;
+    health: number;
+    maxHealth: number;
+    damage: number;
+    restoreHealth: number;
 }
 
 export enum PlayerState {

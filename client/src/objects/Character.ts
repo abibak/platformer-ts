@@ -1,10 +1,12 @@
 import Entity from "./Entity";
-import {ICharacter, PlayerState} from "@/types/game";
+import {ICharacter} from "@/types/game";
 import Animator from "./Animator";
 import Canvas from "./Canvas";
-import {loadImage} from "@/utils/utils";
 import EventBus from "@/EventBus";
 import Library from "@/library/Library";
+import {Sprite, SpriteList} from "@/types/main";
+import configSpritePlayer from "@/assets/data-sprites/player.json";
+import configSpriteEnemies from "@/assets/data-sprites/enemies.json";
 
 export default class Character extends Entity implements ICharacter {
     public isIdle: boolean = false;
@@ -12,6 +14,7 @@ export default class Character extends Entity implements ICharacter {
     public isMovingLeft: boolean = false;
     public isMovingRight: boolean = false;
     public isAttack: boolean = false;
+    public isHurt: boolean = false;
     public onGround: boolean = false;
     public isDead: boolean = false;
     public isFacingLeft: boolean = false;
@@ -39,42 +42,64 @@ export default class Character extends Entity implements ICharacter {
     protected gravity: number = 0.4;
 
     protected animator: Animator;
+    protected action: string = '';
 
     private readonly _canvas: Canvas;
     private _bus: EventBus;
     private _library: Library;
 
-    public constructor(canvas: Canvas, library: Library, type: string) {
+    public constructor(canvas: Canvas, bus: EventBus, library: Library, type: string) {
         super();
         this._canvas = canvas;
+        this._bus = bus;
         this._library = library;
         this.type = type;
 
+        this._bus.subscribe('animator:animationFinish', this.animationFinish.bind(this));
         this.setDefaultAnimation();
+    }
+
+    private animationFinish(animationName: string): void {
+        if (animationName === 'attack') {
+            this._library.sounds('player').sword_miss.finish();
+            this._bus.publish('toggleClickState', false);
+        }
+
+        if (animationName === 'death') {
+            this._bus.publish('game:filterEntities');
+        }
+
+        if (animationName === 'hurt') {
+            this.isHurt = false;
+        }
     }
 
     public async update(timestamp): Promise<void> {
         this.adjustVerticalMovement();
         this.adjustHorizontalMovement();
 
-        let jsonDataSprite = {};
-
-        const getPath = await this.updateAnimation(); // путь до спрайта
+        let frameList: SpriteList;
+        const getPath = await this.updateAnimation(); // обработка состояние персонажа
 
         if (this.type === 'player') {
-            jsonDataSprite = (await import('@/assets/data-sprites/player.json')).default;
+            frameList = configSpritePlayer;
         } else if (this.type === 'enemy') {
-            jsonDataSprite = (await import('@/assets/data-sprites/fire-warm.json')).default;
+            frameList = configSpriteEnemies[this.name];
         }
 
-        const spriteMap = jsonDataSprite.frames[getPath.status];
-        const modifiedSpriteMap = this.prepareSpriteMapData(spriteMap); // подготовка данных спрайта к отрисовке
+        const spriteMap: Sprite = frameList.frames[getPath.status];
 
-        this.animator.setPath(getPath, modifiedSpriteMap);
+        await this.animator.setPath(getPath, this.reflectSprite(spriteMap));
         await this.animator.update(timestamp);
     }
 
-    public prepareSpriteMapData(data: any): any {
+    protected async getSpriteDataByAnimationName(action: string): Promise<Sprite> {
+        if (this.type === 'player') {
+            return configSpritePlayer.frames[action];
+        }
+    }
+
+    public reflectSprite(data: any): any {
         let temp = {
             y: this.y,
             scaleX: 0,
@@ -92,92 +117,71 @@ export default class Character extends Entity implements ICharacter {
         return {...data, ...temp};
     }
 
-    // rename to "updateAnimation"
     public async updateAnimation(): Promise<any> {
-        let path: string = '';
-        let animation: string = '';
+        // let animation: string = '';
 
-        if (this.type === 'player') {
-            path = 'images/sprites/player/';
-        } else if (this.type === 'enemy') {
-            switch (this.name) {
-                case 'fire-warm':
-                    path = `images/sprites/enemies/${this.name}/`;
-                    break;
-            }
+        if (this.isDead) {
+            this.action = 'death';
         }
 
-        if (!(this.isMovingLeft || this.isMovingRight) && !this.isJump && !this.isFall) {
+        if (!(this.isMovingLeft || this.isMovingRight) && !this.isJump && !this.isFall && !this.isDead) {
             this.isIdle = true;
-            animation = 'idle';
+            this.action = 'idle';
         }
 
         if (this.isMovingLeft || this.isMovingRight) {
             if (this.type === 'enemy') {
-                animation = 'walk';
+                this.action = 'walk';
             } else {
-                animation = 'run';
+                this.action = 'run';
             }
         }
 
+        if (this.isHurt) {
+            this.action = 'hurt';
+        }
+
         if (this.isJump) {
-            animation = 'jump';
+            this.action = 'jump';
         }
 
         if (this.isFall) {
             if (this.type === 'enemy') {
-                animation = 'idle';
+                this.action = 'idle';
             } else {
-                animation = 'fall';
+                this.action = 'fall';
             }
         }
 
         if (this.isAttack) {
-            animation = 'attack';
+            this.action = 'attack';
             this._library.sounds('player').sword_miss.play();
         }
 
-        if (this.animator.currentFrameFinish) {
-            if (animation === 'run') {
-                //this._library.sounds('player').run.finish();
-            }
-        }
-
-        if (this.animator.finish) {
-            if (animation === 'attack') {
-                this._library.sounds('player').sword_miss.finish();
-                this._bus.publish('toggleClickState', false);
-            }
-        }
-
-        let url: string = await loadImage('assets/' + path + animation);
+        let url: string = this._library.sprites()[this.name][this.action].url;
 
         return {
             url: url,
-            status: animation,
+            status: this.action,
         }
     }
 
     // rename to "setInstanceAnimation"
     public setDefaultAnimation(): void {
-        this.animator = new Animator(this._canvas, this.type);
+        this.animator = new Animator(this._canvas, this._bus, this.type);
     }
 
     public startMovingLeft(): void {
-        if (!this.isMovingLeft) {
-            if (!this.isMovingRight) {
-                this.isMovingLeft = true;
-                this.isFacingLeft = true;
-            }
+        if (!this.isMovingRight) {
+            this.isMovingLeft = true;
+            this.isFacingLeft = true;
         }
     }
 
     public startMovingRight(): void {
-        if (!this.isMovingRight) {
-            if (!this.isMovingLeft) {
-                this.isMovingRight = true;
-                this.isFacingLeft = false;
-            }
+        if (!this.isMovingLeft) {
+            this.isMovingRight = true;
+            this.isFacingLeft = false;
         }
     }
 
@@ -218,16 +222,28 @@ export default class Character extends Entity implements ICharacter {
         this.oldY = this.y;
     }
 
-    attack() {
+    public attack(): void {
+
     }
 
-    dead() {
+    dead(): void {
+        this._bus.publish('game:filterColliders');
+        console.log('death:', this);
     }
 
-    getHurt() {
+    getHurt(damage: number): void {
+        if (damage >= this.health) {
+            this.health = 0;
+            this.isDead = true;
+            this.dead();
+            return;
+        }
+
+        this.isHurt = true;
+        this.health -= damage;
     }
 
-    jump() {
+    jump(): void {
         this._library.sounds('player').jump.play();
 
         this.jumpQuantity++;
@@ -242,8 +258,5 @@ export default class Character extends Entity implements ICharacter {
             this.isJump = false;
             this.jumpHeight = this.maxJumpHeight;
         }
-    }
-
-    restoreHealth() {
     }
 }

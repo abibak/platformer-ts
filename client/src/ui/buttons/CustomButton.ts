@@ -1,14 +1,13 @@
 import Canvas from "@/objects/Canvas";
 import UIElement from "@/ui/UIElement";
-import {loadImage} from "@/utils/utils";
 
-export default class Button extends UIElement {
+export default class CustomButton extends UIElement {
     private readonly _canvas: Canvas;
     private _x: number;
     private _y: number;
     private _width: number;
     private _height: number;
-    private _img: HTMLImageElement;
+    private _text: string;
 
     public className: string = '';
 
@@ -19,7 +18,7 @@ export default class Button extends UIElement {
         y: number,
         width: number,
         height: number,
-        path: string,
+        text: string,
     ) {
         super(x, y, width, height);
         this._canvas = canvas;
@@ -27,20 +26,17 @@ export default class Button extends UIElement {
         this._y = y;
         this._width = width;
         this._height = height;
-        this._img = new Image;
-
-        loadImage(path).then(url => {
-            this._img.src = url;
-        });
+        this._text = text;
     }
 
     public draw(): void {
-        this._canvas.drawUIButtonElement({
+        this._canvas.drawCustomButton({
             x: this._x,
             y: this._y,
             w: this._width,
             h: this._height,
-            img: this._img,
+            label: this._text,
+            color: '#B0543B',
         });
     }
 }

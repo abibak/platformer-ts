@@ -1,4 +1,12 @@
-// основной класс загрузки ресурсов игры
+// Library - класс для загрузки всех ресурсов игры
+
+// loadSounds и loadTiles должны добавлять элементы в общий массив промисов, что не формировать каждый массив
+// дублирование кода - должен быть основной загрузчик (load) для ImageManager и AudioManager
+
+// progress load - формируется на основе положительного результат выполнения промиса
+// если промис отклонен, дальнейшая загрузка прерывается
+// если totalLoaded равен needLoaded, считается, что загрузка заверешена на 100% (банально но, работает)
+
 
 import ImageManager from "@/library/ImageManager";
 import AudioManager from "@/library/AudioManager";
@@ -8,6 +16,7 @@ import Canvas from "@/objects/Canvas";
 import EventBus from "@/EventBus";
 
 type TileImage = { [key: string]: ImageManager }
+type AllowPromises = AudioManager | ImageManager;
 
 export default class Library implements Library {
     private _canvas: Canvas;
@@ -18,7 +27,8 @@ export default class Library implements Library {
 
     private _sounds: Sounds;
     private _tiles: TileImage = {};
-    private _images: TileImage  = {};
+    private _images: TileImage = {};
+    private _sprites;
 
     public constructor(canvas: Canvas, bus: EventBus) {
         this._canvas = canvas;
@@ -28,19 +38,52 @@ export default class Library implements Library {
             background: new ImageManager('images/backgrounds/background3.jpg'),
         }
 
+        this._sprites = {
+            player: {
+                idle: new ImageManager('images/sprites/player/idle.png'),
+                attack: new ImageManager('images/sprites/player/attack.png'),
+                fall: new ImageManager('images/sprites/player/fall.png'),
+                jump: new ImageManager('images/sprites/player/jump.png'),
+                run: new ImageManager('images/sprites/player/run.png'),
+                hurt: new ImageManager('images/sprites/player/hurt.png'),
+            },
+            'fire-warm': {
+                idle: new ImageManager('images/sprites/enemies/fire-warm/idle.png'),
+                attack: new ImageManager('images/sprites/enemies/fire-warm/attack.png'),
+                death: new ImageManager('images/sprites/enemies/fire-warm/death.png'),
+                walk: new ImageManager('images/sprites/enemies/fire-warm/walk.png'),
+                hurt: new ImageManager('images/sprites/enemies/fire-warm/hurt.png')
+            },
+        }
+
+        /*
+        * дождаться успешного выполнения loadSounds и loadTiles
+        * после вызвать init для подготовки промисов
+        * в случае положительного результат, вызвать метод в App
+        * */
         Promise.all([this.loadSounds(), this.loadTiles()]).then(() => {
             this.init().then(() => this._bus.publish('library:loaded'));
         });
     }
 
     public async init(): Promise<void> {
-        return new Promise(async (resolve, reject) => {
-            const promises: any[] = [];
+        // общий массив промисов
+        const promises: AllowPromises[] = [];
 
+        // вынести в метод загрузки спрайтов
+        for (const key: string of Object.keys(this._sprites)) {
+            for (const obj: ImageManager of Object.values(this._sprites[key])) {
+                promises.push(obj)
+            }
+        }
+
+        return new Promise(async (resolve, reject): Promise<void> => {
+            // распределение промисов, для использования метода load
             promises.push(
                 ...Object.values(this._tiles),
                 ...Object.values(this._sounds.player),
-                this._images.background
+                ...Object.values(this._sounds.world),
+                this._images.background,
             );
 
             this._needLoad = promises.length;
@@ -68,6 +111,9 @@ export default class Library implements Library {
         this._canvas.drawProgressLoad(progress);
     }
 
+    /*
+    * Тайлы импортируются динамически, используя номера тайла указанные в map.json
+    * */
     private async loadTiles(): Promise<void> {
         const keys: string[] = Object.keys(tilemap.level1.tiles);
 
@@ -109,5 +155,9 @@ export default class Library implements Library {
 
     public images(): TileImage {
         return this._images;
+    }
+
+    public sprites() {
+        return this._sprites;
     }
 }

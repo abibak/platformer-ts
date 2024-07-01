@@ -3,6 +3,7 @@ import UIElement from "@/ui/UIElement";
 import Button from "@/ui/buttons/Button";
 import Canvas from "@/objects/Canvas";
 import {loadImage} from "@/utils/utils";
+import CustomButton from "@/ui/buttons/CustomButton";
 
 export default class UI {
     private readonly _bus: EventBus;
@@ -14,13 +15,13 @@ export default class UI {
         this._bus = bus;
         this._canvas = canvas;
 
-        this.elements.push(new Button(
+        this.elements.push(new CustomButton(
             this._canvas,
             200,
             200,
-            100,
-            40,
-            'assets/ui/buttons/play/72px/play01',
+            120,
+            45,
+            'Начать'
         ));
 
         this.createStartMenu().then(() => this.init());
@@ -51,6 +52,7 @@ export default class UI {
     }
 
     private async createStartMenu() {
+        this.elements[0].draw();
         const url = await loadImage('assets/ui/buttons/play/72px/play01');
         document.querySelector('.main-screen__menu').innerHTML += `<img src="${url}" alt="Start button" class="start-game-button">`;
     }

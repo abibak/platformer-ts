@@ -45,6 +45,16 @@
       "scale": 0,
       "step": 184,
       "framesCount": 4
+    },
+    "hurt": {
+      "w": 44,
+      "h": 82,
+      "xOffset": 0,
+      "yOffset": 0,
+      "move": 0,
+      "scale": 0,
+      "step": 184,
+      "framesCount": 3
     }
   }
 }

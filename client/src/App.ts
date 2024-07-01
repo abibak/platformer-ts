@@ -27,7 +27,7 @@ export default class App {
 
 
         this._bus.subscribe('library:loaded', () => {
-            this.init();
+            //this.init();
 
             new Promise((resolve) => {
                 setTimeout(() => {
@@ -35,7 +35,7 @@ export default class App {
                     resolve();
                 }, 1000);
             }).then(() => {
-                //this._ui = new UI(this._bus, this._canvas);
+                this._ui = new UI(this._bus, this._canvas);
                 this._bus.subscribe('app:start', this.start.bind(this));
                 this._bus.subscribe('app:end', this.end.bind(this));
             });
@@ -77,6 +77,7 @@ export default class App {
     private handleInputMouse(event): void {
         if (event.type === 'mousedown' && event.which === 1) {
             this._mouseController.handleMouseEventDown(event);
+            this._bus.publish('player:attack');
         }
 
         // if (event.type === 'mouseup' && event.which === 1) {

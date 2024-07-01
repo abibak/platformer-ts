@@ -1,0 +1,46 @@
+{
+  "fire-warm": {
+    "frames": {
+      "idle": {
+        "w": 50,
+        "h": 44,
+        "xOffset": 0,
+        "yOffset": 0,
+        "move": 0,
+        "scale": 0,
+        "step": 90,
+        "framesCount": 9
+      },
+      "walk": {
+        "w": 52,
+        "h": 44,
+        "xOffset": 0,
+        "yOffset": 0,
+        "move": 0,
+        "scale": 0,
+        "step": 90,
+        "framesCount": 9
+      },
+      "death": {
+        "w": 52,
+        "h": 48,
+        "xOffset": 0,
+        "yOffset": 0,
+        "move": 0,
+        "scale": 0,
+        "step": 90,
+        "framesCount": 8
+      },
+      "hurt": {
+        "w": 52,
+        "h": 48,
+        "xOffset": 0,
+        "yOffset": 0,
+        "move": 0,
+        "scale": 0,
+        "step": 90,
+        "framesCount": 3
+      }
+    }
+  }
+}
