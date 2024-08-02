@@ -25,9 +25,8 @@ export default class App {
         this._mouseController = new MouseController;
         this._library = new Library(this._canvas, this._bus);
 
-
         this._bus.subscribe('library:loaded', () => {
-            //this.init();
+            this.init();
 
             new Promise((resolve) => {
                 setTimeout(() => {
@@ -35,7 +34,7 @@ export default class App {
                     resolve();
                 }, 1000);
             }).then(() => {
-                this._ui = new UI(this._bus, this._canvas);
+                //this._ui = new UI(this._bus, this._canvas);
                 this._bus.subscribe('app:start', this.start.bind(this));
                 this._bus.subscribe('app:end', this.end.bind(this));
             });

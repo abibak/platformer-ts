@@ -59,7 +59,7 @@ export default class World {
         const characters: CharacterMap[] = level.objects;
 
         characters.forEach((obj: CharacterMap): void => {
-            const config = enemies[obj.name];
+            const config = enemies[obj.name]; // обработать дублирование конфигов
             const enemy: Enemy = new Enemy(this._library, this._bus, this._canvas, {...config, x: obj.x, y: obj.y});
             enemy.id = obj.id;
             enemy.name = obj.name;

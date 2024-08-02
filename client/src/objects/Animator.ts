@@ -32,7 +32,7 @@ export default class Animator {
         this._instanceTypeName = type;
     }
 
-    public setPath(path: any, spriteMap: any): void {
+    public setPath(path: any, spriteMap: any, frameEvents = undefined): void {
         this._path = path.url ?? path;
         this._spriteMap = spriteMap;
 
@@ -45,7 +45,7 @@ export default class Animator {
         this._action = path.status;
     }
 
-    public async update(timestamp) {
+    public async update(timestamp): Promise<void> {
         if (!this._lastTime) {
             this._lastTime = timestamp;
         }
@@ -88,7 +88,7 @@ export default class Animator {
         this._frameScale += this._spriteMap.step;
 
         if (this._currentFrame >= this._framesCount) {
-            this._bus.publish('animator:animationFinish', this._action)
+            this._bus.publish('animator:animationFinish', this._action);
             this.finish = true;
             this._frameScale = 0;
             this._currentFrame = 0;
@@ -97,6 +97,6 @@ export default class Animator {
 
     // рендер анимации
     private render(params: AnimationRenderParams): void {
-        this._canvas.drawAnimation(params);
+        this._canvas.drawAnimation(params)
     }
 }

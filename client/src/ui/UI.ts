@@ -32,23 +32,7 @@ export default class UI {
     }
 
     private subscribeEvents(): void {
-        const startGameButton: HTMLElement = document.querySelector('.start-game-button');
-        const mainScreenEl: HTMLElement = document.querySelector('.main-screen');
-        const screenHeight = document.documentElement.clientHeight / 2;
-
-        startGameButton.addEventListener('click', (e) => {
-            mainScreenEl.style.transform = 'scale(1.05)';
-
-            document.querySelector('.upper-closing-side').style.height = screenHeight + 'px';
-            document.querySelector('.bottom-closing-side').style.height = screenHeight + 'px';
-
-            setTimeout(() => {
-                mainScreenEl.style.display = 'none';
-                document.querySelector('.upper-closing-side').style.height = 0;
-                document.querySelector('.bottom-closing-side').style.height = 0;
-                this._bus.publish('app:start')
-            }, 1000);
-        });
+        document.querySelector('.start-game-button').addEventListener('click', this.startGame.bind(this));
     }
 
     private async createStartMenu() {
@@ -62,10 +46,23 @@ export default class UI {
     }
 
     public startGame(): void {
+        const mainScreenEl: HTMLElement = document.querySelector('.main-screen');
+        const screenHeight = document.documentElement.clientHeight / 2;
 
+        mainScreenEl.style.transform = 'scale(1.05)';
+
+        document.querySelector('.upper-closing-side').style.height = screenHeight + 'px';
+        document.querySelector('.bottom-closing-side').style.height = screenHeight + 'px';
+
+        setTimeout(() => {
+            mainScreenEl.style.display = 'none';
+            document.querySelector('.upper-closing-side').style.height = 0;
+            document.querySelector('.bottom-closing-side').style.height = 0;
+            this._bus.publish('app:start')
+        }, 1000);
     }
 
     public update(): void {
-        
+
     }
 }

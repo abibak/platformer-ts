@@ -2,8 +2,8 @@ import AudioManager from "@/library/AudioManager";
 import Character from "@/objects/Character";
 
 /* Event Bus */
-type Callback = (arg?: any) => void;
-type Subscriber = Record<string, {[key: string | number]: Callback}>
+export type Callback = (arg?: any) => void;
+export type Subscriber = Record<string, {[key: string | number]: Callback}>
 /* */
 
 export interface Library {
@@ -78,6 +78,7 @@ export interface Sprite {
     scale?: number;
     step?: number;
     frameCount: number;
+    attackFrame: number;
 }
 
 export interface SpriteList {

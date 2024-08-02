@@ -40,7 +40,21 @@
         "scale": 0,
         "step": 90,
         "framesCount": 3
+      },
+      "attack": {
+        "w": 75,
+        "h": 54,
+        "xOffset": 0,
+        "yOffset": 5,
+        "move": 0,
+        "scale": 0,
+        "step": 90,
+        "framesCount": 16,
+        "attackFrame": 12
       }
+    },
+    "frameEvents": {
+      "attack": 12
     }
   }
 }

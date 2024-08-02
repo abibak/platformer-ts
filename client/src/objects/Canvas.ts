@@ -39,6 +39,7 @@ export default class Canvas {
         this.xOffset = x;
         this.yOffset = y;
 
+        this._ctx.restore();
         this._ctx.save();
         this._ctx.translate(x, y);
     }
@@ -73,6 +74,7 @@ export default class Canvas {
         this._ctx.drawImage(img, 0 - this.xOffset, 0 - this.yOffset, this.width, this.height);
     }
 
+
     // Отрисовка объектов
     public drawMap(platform): void {
         this._ctx.drawImage(platform.img, platform.x, platform.y, platform.w, platform.h);
@@ -81,9 +83,10 @@ export default class Canvas {
     // Общая функция отрисовки анимации на canvas
     // Добавить тип для params
     public drawAnimation(params): void {
+        this._ctx.save();
         if (params.type !== 'player') {
-            params.x = params.x - params.xOffset + this.xOffset;
-            params.y = params.y - params.yOffset + this.yOffset;
+            params.x = params.x - params.xOffset;
+            params.y = params.y - params.yOffset;
         }
 
         this._ctx.scale(params.scaleX, params.scaleY);

@@ -22,6 +22,7 @@ export default class Character extends Entity implements ICharacter {
         coins: number;
     }
     public speed: number = 5;
+    public speedMultiplier: number = 1;
     public isJump: boolean = false;
     public jumpQuantity: number = 0;
     public maxJumpQuantity: number = 2;
@@ -45,8 +46,8 @@ export default class Character extends Entity implements ICharacter {
     protected action: string = '';
 
     private readonly _canvas: Canvas;
-    private _bus: EventBus;
-    private _library: Library;
+    private readonly _bus: EventBus;
+    protected readonly _library: Library;
 
     public constructor(canvas: Canvas, bus: EventBus, library: Library, type: string) {
         super();
@@ -62,6 +63,7 @@ export default class Character extends Entity implements ICharacter {
     private animationFinish(animationName: string): void {
         if (animationName === 'attack') {
             this._library.sounds('player').sword_miss.finish();
+            this.isAttack = false;
             this._bus.publish('toggleClickState', false);
         }
 
@@ -79,12 +81,16 @@ export default class Character extends Entity implements ICharacter {
         this.adjustHorizontalMovement();
 
         let frameList: SpriteList;
+        let frameEvents;
+
         const getPath = await this.updateAnimation(); // обработка состояние персонажа
 
         if (this.type === 'player') {
             frameList = configSpritePlayer;
+            frameEvents = frameList.frameEvents;
         } else if (this.type === 'enemy') {
             frameList = configSpriteEnemies[this.name];
+            frameEvents = frameList.frameEvents;
         }
 
         const spriteMap: Sprite = frameList.frames[getPath.status];
@@ -96,6 +102,10 @@ export default class Character extends Entity implements ICharacter {
     protected async getSpriteDataByAnimationName(action: string): Promise<Sprite> {
         if (this.type === 'player') {
             return configSpritePlayer.frames[action];
+        }
+
+        if (this.type === 'enemy') {
+            return configSpriteEnemies[this.name].frames[action];
         }
     }
 
@@ -110,7 +120,7 @@ export default class Character extends Entity implements ICharacter {
             data.x = -(this.x + (this.width));
             temp.scaleX = -1;
         } else {
-            data.x = +this.x;
+            data.x = this.x;
             temp.scaleX = 1;
         }
 
@@ -129,7 +139,7 @@ export default class Character extends Entity implements ICharacter {
             this.action = 'idle';
         }
 
-        if (this.isMovingLeft || this.isMovingRight) {
+        if ((this.isMovingLeft || this.isMovingRight) && !this.isDead) {
             if (this.type === 'enemy') {
                 this.action = 'walk';
             } else {
@@ -153,9 +163,8 @@ export default class Character extends Entity implements ICharacter {
             }
         }
 
-        if (this.isAttack) {
+        if (this.isAttack && !this.isDead && !this.isHurt) {
             this.action = 'attack';
-            this._library.sounds('player').sword_miss.play();
         }
 
         let url: string = this._library.sprites()[this.name][this.action].url;
@@ -198,12 +207,14 @@ export default class Character extends Entity implements ICharacter {
     }
 
     protected adjustHorizontalMovement(): void {
-        if (this.isMovingLeft && !this.isAttack) {
-            this.x -= this.speed;
-        }
+        if (!this.isDead) {
+            if (this.isMovingLeft && !this.isAttack) {
+                this.x -= this.speed * this.speedMultiplier;
+            }
 
-        if (this.isMovingRight && !this.isAttack) {
-            this.x += this.speed;
+            if (this.isMovingRight && !this.isAttack) {
+                this.x += this.speed * this.speedMultiplier;
+            }
         }
     }
 
@@ -240,6 +251,7 @@ export default class Character extends Entity implements ICharacter {
         }
 
         this.isHurt = true;
+        console.log(damage)
         this.health -= damage;
     }
 

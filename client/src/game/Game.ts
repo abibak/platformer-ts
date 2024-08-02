@@ -11,6 +11,7 @@ import UI from "@/ui/UI";
 import Library from "@/library/Library";
 import CollisionHandler from "@/handlers/CollisionHandler";
 import Character from "@/objects/Character";
+import {filterAliveEntities, filterMapObjects} from "@/utils/utils";
 import {Tile} from "@/types/main";
 import playerConfig from "@/assets/data/player.json";
 
@@ -65,13 +66,13 @@ export default class Game {
         });
 
         this._bus.subscribe('toggleClickState', this._mouseController.toggleStateClick.bind(this._mouseController));
-        this._bus.subscribe('game:filterEntities', () => this._entities = this.filterAliveCharacters(this._entities));
-        this._bus.subscribe('game:filterColliders', () => this._mapObjects = this.filterAliveCharacters(this._mapObjects));
-        this._bus.subscribe('player:attack', (): void => {
-            if (!this._player.isAttack) {
-                this._player.attack();
-            }
-        });
+        this._bus.subscribe('game:filterEntities', () => this._entities = filterAliveEntities(this._entities));
+        this._bus.subscribe('game:filterColliders', () => this._mapObjects = filterMapObjects(this._mapObjects));
+        // this._bus.subscribe('player:attack', (): void => {
+        //     if (!this._player.isAttack) {
+        //         this._player.attack();
+        //     }
+        // });
     }
 
     private createPlayer(): Promise<Player> {
@@ -115,6 +116,10 @@ export default class Game {
                 if (side) {
                     CollisionHandler.handle(entity, obj, side as string);
                 }
+
+                if (!side) {
+                    CollisionHandler.handle(entity, null, side as boolean)
+                }
             });
         });
     }
@@ -129,7 +134,7 @@ export default class Game {
             this._library.sounds('world').light_ambient2.replay();
         }
 
-        this._entities.forEach((entity: Player | Enemy): void => {
+        this._entities.forEach((entity: Character): void => {
             entity.onGround = false;
         });
 
@@ -141,14 +146,17 @@ export default class Game {
 
     private async render(timestamp): Promise<void> {
         await this._world.update();
-        await this._entities.forEach((entity: Player | Enemy): void => {
+        await this._entities.forEach((entity: Character): void => {
             entity.update(timestamp);
         });
         await this._canvas.drawHealthPlayer(this._player.health, this._player.maxHealth);
     }
 
     public handleCharacterActionMouse(): void {
-        this._player.isAttack = this._mouseController.click;
+
+        //this._bus.publish('player:attack');
+
+        //this._player.isAttack = this._mouseController.click;
     }
 
     public handleCharacterMovement(): void {
@@ -171,31 +179,4 @@ export default class Game {
             this._player.stopMovingRight();
         }
     }
-
-
-    private filterAliveCharacters(obj): Character[] {
-        return obj.filter(item => {
-            if (item instanceof Character) {
-                return !item.isDead;
-            }
-
-            return true;
-        });
-    }
-
-    // private filterAliveCollideCharacters(): void {
-    //     this._mapObjects = this._mapObjects.filter((obj: Tile | Character): boolean | Tile => {
-    //         if (obj instanceof Character) {
-    //             return !obj.isDead;
-    //         }
-    //
-    //         return obj;
-    //     });
-    // }
-    //
-    // private filterAliveCharacters(): void {
-    //     this._entities = this._entities.filter((entity: Character) => {
-    //         return !entity.isDead;
-    //     });
-    // }
 }

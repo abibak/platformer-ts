@@ -1,6 +1,7 @@
 import Character from "@/objects/Character";
 import {AutomatedCharacter} from "@/types/main";
 import Enemy from "@/objects/Enemy";
+import Player from "@/objects/Player";
 
 export default class Brain {
     private _characters: AutomatedCharacter[] = [];
@@ -37,46 +38,72 @@ export default class Brain {
         const leftRange: number = centerHorizontalPoint - range;
         const rightRange: number = centerHorizontalPoint + range;
 
-        // цель захвачена
         if (obj.target) {
 
         }
 
-        this._targets.forEach((target: Character): void => {
+        this._targets.forEach((target: Player): void => {
             const {x: x, y: y, width: w, height: h} = target;
 
             // если цель находится в диапазоне двух значений от центра объекта и если цель находится в диапазоне высоты объекта
             if ((x + w >= leftRange && x + w <= rightRange) &&
                 (target.y + target.height) >= attacker.y && (target.y) <= (attacker.y + attacker.height)) {
+                attacker.isMovingLeft = false;
+                attacker.isMovingRight = false;
                 obj.target = target;
 
                 const lTempX: number = target.x + target.width;
                 const rTempX: number = target.x - attacker.width;
 
-                let rightDistance: number = attacker.x - rTempX
-                let leftDistance: number = attacker.x - lTempX
+                let rightDistance: number = attacker.x - rTempX;
+                let leftDistance: number = attacker.x - lTempX;
+
+                attacker.speedMultiplier = 3.5;
+
+                if (attacker.isFacingLeft && attacker.isMovingLeft) {
+                    attacker.stopMovingLeft();
+                } else {
+                    attacker.stopMovingRight();
+                }
 
                 // если цель по Х больше чем ширина leftRange, то считается правой стороной
                 if (x + w >= leftRange + range) {
                     // правая сторона
                     obj.targetSide = 'right';
-                    attacker.x += (rightDistance < 0) ? attacker.speed * 2 : 0;
+
+                    if (rightDistance <= 0) {
+                        attacker.startMovingRight();
+                    } else {
+                        attacker.stopMovingRight();
+                    }
                 } else {
                     // левая сторона
                     obj.targetSide = 'left';
-                    attacker.x -= (leftDistance > 0) ? attacker.speed * 2 : 0;
+                    attacker.startMovingLeft();
+
+                    if (leftDistance >= 0) {
+                        attacker.startMovingLeft();
+                    } else {
+                        attacker.stopMovingLeft();
+                    }
                 }
 
                 if (Math.abs(leftDistance) <= 0 || Math.abs(rightDistance) <= 0) {
                     if (attacker instanceof Enemy) {
-                        attacker.attack(target);
+                        if (!attacker.isAttack) {
+                            attacker.attack(target);
+                        }
                     }
                 }
 
                 return;
             }
 
+            obj.target = null;
             obj.targetSide = '';
+            attacker.speedMultiplier = 1;
+            attacker.stopMovingRight();
+            attacker.stopMovingLeft();
         });
     }
 
@@ -94,29 +121,23 @@ export default class Brain {
         const endMovingPointRight: boolean = obj.x >= obj.movementPoints.startX + obj.movementPoints.length;
 
         if (!reachedRightBorder) {
-            this.movementRight(obj);
+            obj.startMovingRight();
 
             if (endMovingPointRight || !notCollisionRightSide) {
                 item.reachedRightBorder = true;
                 item.reachedLeftBorder = false;
+                obj.stopMovingRight();
             }
         }
 
         if (!reachedLeftBorder && reachedRightBorder) {
-            this.movementLeft(obj);
+            obj.startMovingLeft();
 
             if (endMovingPointLeft || !notCollisionLeftSide) {
                 item.reachedLeftBorder = true;
                 item.reachedRightBorder = false;
+                obj.stopMovingLeft();
             }
         }
-    }
-
-    private movementLeft(obj: Character): void {
-        obj.x -= obj.speed;
-    }
-
-    private movementRight(obj: Character): void {
-        obj.x += obj.speed;
     }
 }
