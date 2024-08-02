@@ -14,6 +14,7 @@ export interface ICharacter extends IEntity {
     isFall: boolean;
 
     attack(): void;
+
     attack(attacked: ICharacter): void
 
     jump(): void;

@@ -40,6 +40,8 @@ export default class Player extends Character implements IPlayer {
         this._restoreHealth = config.restoreHealth;
         this._entities = entities;
         this.oldY = this.y;
+
+        this._bus.subscribe('player:attack', this.attack.bind(this));
     }
 
     public async update(timestamp): Promise<void> {
@@ -87,6 +89,7 @@ export default class Player extends Character implements IPlayer {
                 if ((entity.x >= startX && entity.x <= endX) ||
                     (entity.x + entity.width >= endX && entity.x <= startX)
                 ) {
+                    this._library.sounds('player').sword_miss.play();
                     entity.getHurt(this.damage);
                 }
             }

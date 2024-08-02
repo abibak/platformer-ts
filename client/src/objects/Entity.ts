@@ -8,9 +8,9 @@ export default class Entity implements IEntity {
     private _height: number;
     private _oldY: number = 0;
 
-    public health: number;
-    public maxHealth: number;
-    public damage: number;
+    protected health: number;
+    protected maxHealth: number;
+    protected damage: number;
     public type: string;
     public name: string;
     public isFall: boolean;

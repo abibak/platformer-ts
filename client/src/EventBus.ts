@@ -1,3 +1,6 @@
+import {Subscriber} from "@/types/main";
+import {Callback} from "@/types/main";
+
 export default class EventBus {
     private _id: number = 0;
     private _subscribes: Subscriber = {};

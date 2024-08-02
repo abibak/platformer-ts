@@ -7,6 +7,6 @@
     "speed": 5,
     "health": 50,
     "maxHealth": 50,
-    "damage": 40
+    "damage": 3
   }
 }
