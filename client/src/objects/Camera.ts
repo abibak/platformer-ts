@@ -14,8 +14,8 @@ export default class Camera {
     }
 
     public async update(): Promise<void> {
-        let targetX: number = (this._target.x - (this._canvas.width / 2)) + this._target.width;
-        let targetY: number = (this._target.y - (this._canvas.height / 2)) - this._target.height;
+        let targetX: number = (this._target.x - (window.innerWidth / 2)) + this._target.width;
+        let targetY: number = (this._target.y - (window.innerHeight / 2)) - this._target.height;
 
         //если камера справа в конце canvas
         // if ((this._target.x + this._target.width) >= this._canvas.width) {

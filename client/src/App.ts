@@ -40,7 +40,6 @@ export default class App {
             });
         });
 
-
         // this._socket.connection(process.env.WSS_URL).then(() => {
         //     this.subscribeEvents();
         // }).catch(error => {

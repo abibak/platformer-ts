@@ -8,10 +8,11 @@ type ButtonOptions = {
 }
 
 export default class Canvas {
-    public width: number;
-    public height: number;
     private _canvas: HTMLCanvasElement;
     private _ctx: CanvasRenderingContext2D;
+
+    public width: number;
+    public height: number;
     public xOffset: number = 0;
     public yOffset: number = 0;
 
@@ -44,7 +45,6 @@ export default class Canvas {
         this._ctx.translate(x, y);
     }
 
-    // Очитска Canvas
     public clearCanvas(): void {
         this._ctx.clearRect(0, 0, this.width, this.height);
     }
@@ -68,20 +68,17 @@ export default class Canvas {
         this._ctx.fillText(props.label, textX, props.y)
     }
 
-    // Отрисовка фона
     public drawBackground(img: HTMLImageElement) {
         // смещение по x and y камеры, для фиксирования фона
         this._ctx.drawImage(img, 0 - this.xOffset, 0 - this.yOffset, this.width, this.height);
     }
 
 
-    // Отрисовка объектов
+    // отрисовка объектов карты
     public drawMap(platform): void {
         this._ctx.drawImage(platform.img, platform.x, platform.y, platform.w, platform.h);
     }
 
-    // Общая функция отрисовки анимации на canvas
-    // Добавить тип для params
     public drawAnimation(params): void {
         this._ctx.save();
         if (params.type !== 'player') {
