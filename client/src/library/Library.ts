@@ -33,11 +33,9 @@ export default class Library implements Library {
     public constructor(canvas: Canvas, bus: EventBus) {
         this._canvas = canvas;
         this._bus = bus;
-
         this._images = {
             background: new ImageManager('images/backgrounds/background3.jpg'),
         }
-
         this._sprites = {
             player: {
                 idle: new ImageManager('images/sprites/player/idle.png'),
