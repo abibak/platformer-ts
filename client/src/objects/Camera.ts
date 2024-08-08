@@ -14,20 +14,8 @@ export default class Camera {
     }
 
     public async update(): Promise<void> {
-        let targetX: number = (this._target.x - (window.innerWidth / 2)) + this._target.width;
-        let targetY: number = (this._target.y - (window.innerHeight / 2)) - this._target.height;
-
-        //если камера справа в конце canvas
-        // if ((this._target.x + this._target.width) >= this._canvas.width) {
-        //     this._canvas.translateCanvas(-this._canvas.width / 2, targetY);
-        //     return;
-        // }
-
-        // если камера слева в конце canvas
-        // if (targetX <= 0) {
-        //     this._canvas.translateCanvas(0, targetY);
-        //     return;
-        // }
+        let targetX: number = (this._target.x - (window.innerWidth / 2)) + this._target.w;
+        let targetY: number = (this._target.y - (window.innerHeight / 2)) - this._target.h;
 
         this._canvas.translateCanvas(-targetX, -targetY);
     }

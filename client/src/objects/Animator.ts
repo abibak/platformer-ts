@@ -66,11 +66,8 @@ export default class Animator {
             h: this._frameHeight,
             x: this._spriteMap.x,
             y: this._spriteMap.y,
-            xOffset: this._spriteMap.xOffset,
-            yOffset: this._spriteMap.yOffset,
-            scaleX: this._spriteMap.scaleX,
-            scaleY: this._spriteMap.scaleY,
-            type: this._instanceTypeName
+            type: this._instanceTypeName,
+            ...this._spriteMap,
         });
 
         /* 1000 / 10 = 100ms

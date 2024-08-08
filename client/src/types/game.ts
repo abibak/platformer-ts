@@ -1,3 +1,5 @@
+import Character from "@/objects/Character";
+
 export interface IEntity {
     type: string;
 }
@@ -5,6 +7,8 @@ export interface IEntity {
 export interface ICharacter extends IEntity {
     isMovingLeft: boolean;
     isMovingRight: boolean;
+    health: number;
+    maxHealth: number;
     stats: {
         coins: number;
     }
@@ -13,9 +17,7 @@ export interface ICharacter extends IEntity {
     isDead: boolean;
     isFall: boolean;
 
-    attack(): void;
-
-    attack(attacked: ICharacter): void
+    attack(entities: Character[]): void;
 
     jump(): void;
 
@@ -60,6 +62,16 @@ export interface PlayerConfig {
     maxHealth: number;
     damage: number;
     restoreHealth: number;
+}
+
+export interface GameObject {
+    x: number;
+    y: number;
+    h: number;
+    w: number;
+    collidable: boolean;
+    type: string;
+    img?: HTMLImageElement;
 }
 
 export enum PlayerState {

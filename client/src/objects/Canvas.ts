@@ -1,4 +1,7 @@
 /* UI Button options */
+import {GameObject} from "@/types/game";
+import Tile from "@/objects/Tile";
+
 type ButtonOptions = {
     x: number;
     y: number;
@@ -68,11 +71,14 @@ export default class Canvas {
         this._ctx.fillText(props.label, textX, props.y)
     }
 
-    public drawBackground(img: HTMLImageElement) {
+    public async drawBackground(img: HTMLImageElement) {
         // смещение по x and y камеры, для фиксирования фона
         this._ctx.drawImage(img, 0 - this.xOffset, 0 - this.yOffset, this.width, this.height);
     }
 
+    public drawTile(tile): void {
+        this._ctx.drawImage(tile.img, tile.x, tile.y, tile.w, tile.h);
+    }
 
     // отрисовка объектов карты
     public drawMap(platform): void {
@@ -81,6 +87,7 @@ export default class Canvas {
 
     public drawAnimation(params): void {
         this._ctx.save();
+
         if (params.type !== 'player') {
             params.x = params.x - params.xOffset;
             params.y = params.y - params.yOffset;
@@ -89,7 +96,7 @@ export default class Canvas {
         this._ctx.scale(params.scaleX, params.scaleY);
         this._ctx.drawImage(
             params.image,
-            params.scale,
+            params.scale - params.scaleOffsetX,
             0,
             params.w + params.xOffset,
             params.h,

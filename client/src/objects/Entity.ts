@@ -39,19 +39,19 @@ export default class Entity implements IEntity {
         this._y = value;
     }
 
-    public get width() {
+    public get w() {
         return this._width;
     }
 
-    public set width(value: number) {
+    public set w(value: number) {
         this._width = value;
     }
 
-    public get height() {
+    public get h() {
         return this._height;
     }
 
-    public set height(value: number) {
+    public set h(value: number) {
         this._height = value;
     }
 

@@ -1,5 +1,5 @@
 import Character from "@/objects/Character";
-import {Tile} from "@/types/main";
+import {GameObject} from "@/types/game";
 
 export async function loadImage(modulePath: string): Promise<string | null> {
     try {
@@ -11,18 +11,18 @@ export async function loadImage(modulePath: string): Promise<string | null> {
     }
 }
 
-export function filterAliveEntities(entities: Character[]): Character[] {
+export function filterAliveEntities(entities: GameObject[]): GameObject[] {
     return entities.filter((obj: Character) => {
         return !obj.isDead;
     });
 }
 
-export function filterMapObjects(objs: (Tile | Character)[]): (Tile | Character)[] {
-    return objs.filter((obj: (Tile | Character)) => {
-        if (obj instanceof Character) {
-            return !obj.isDead;
-        }
-
-        return true;
-    })
-}
+// export function filterMapObjects(objs: (Tile | Character)[]): (Tile | Character)[] {
+//     return objs.filter((obj: (Tile | Character)) => {
+//         if (obj instanceof Character) {
+//             return !obj.isDead;
+//         }
+//
+//         return true;
+//     })
+// }

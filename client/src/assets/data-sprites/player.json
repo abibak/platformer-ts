@@ -6,7 +6,7 @@
       "xOffset": 0,
       "yOffset": 0,
       "move": 0,
-      "scale": 0,
+      "scaleOffsetX": 0,
       "step": 184,
       "framesCount": 6
     },
@@ -15,7 +15,7 @@
       "h": 82,
       "xOffset": 0,
       "yOffset": 0,
-      "scale": 0,
+      "scaleOffsetX": 0,
       "step": 184,
       "framesCount": 8
     },
@@ -24,7 +24,7 @@
       "h": 78,
       "xOffset": 0,
       "yOffset": 0,
-      "scale": 0,
+      "scaleOffsetX": 0,
       "step": 184,
       "framesCount": 2
     },
@@ -33,7 +33,7 @@
       "h": 76,
       "xOffset": 0,
       "yOffset": 0,
-      "scale": 0,
+      "scaleOffsetX": 0,
       "step": 184,
       "framesCount": 2
     },
@@ -42,7 +42,7 @@
       "h": 126,
       "xOffset": 27,
       "yOffset": 45,
-      "scale": 0,
+      "scaleOffsetX": 0,
       "step": 184,
       "framesCount": 4
     },
@@ -52,9 +52,19 @@
       "xOffset": 0,
       "yOffset": 0,
       "move": 0,
-      "scale": 0,
+      "scaleOffsetX": 0,
       "step": 184,
       "framesCount": 3
+    },
+    "death": {
+      "w": 82,
+      "h": 82,
+      "xOffset": 32,
+      "yOffset": 0,
+      "move": 0,
+      "scaleOffsetX": 32,
+      "step": 184,
+      "framesCount": 9
     }
   }
 }

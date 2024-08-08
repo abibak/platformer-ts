@@ -5,10 +5,11 @@ export default class EventBus {
     private _id: number = 0;
     private _subscribes: Subscriber = {};
 
-    public subscribe(eventType: string, callback: Callback) {
+    public subscribe(eventType: string, callback: Callback): void {
         if (!this._subscribes[eventType]) {
             this._subscribes[eventType] = {};
         }
+
         this._subscribes[eventType][this.generateId()] = callback;
     }
 
@@ -18,7 +19,7 @@ export default class EventBus {
         }
 
         await Object.keys(this._subscribes[eventType]).forEach(id => {
-            this._subscribes[eventType][id](data);
+            return this._subscribes[eventType][id](data);
         });
     }
 

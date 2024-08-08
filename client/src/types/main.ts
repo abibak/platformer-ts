@@ -1,28 +1,19 @@
 import AudioManager from "@/library/AudioManager";
 import Character from "@/objects/Character";
+import {GameObject} from "@/types/game";
 
 /* Event Bus */
 export type Callback = (arg?: any) => void;
 export type Subscriber = Record<string, {[key: string | number]: Callback}>
 /* */
 
-export interface Library {
-    sounds: Sounds,
-}
-
 export interface SoundEntity {
     [key: string]: AudioManager
 }
 
-interface SoundEnemy {
-    [key: string]: SoundEntity
+export interface Library {
+    sounds: SoundEntity,
 }
-
-export type Sounds = {
-    player: SoundEntity,
-    enemies: SoundEnemy,
-    world: SoundEntity,
-};
 
 export interface AutomatedCharacter {
     character: Character;
@@ -30,23 +21,6 @@ export interface AutomatedCharacter {
     reachedRightBorder: boolean;
     targetSide: string;
     target?: Character;
-}
-
-export interface Tile {
-    w: number;
-    h: number;
-    x: number;
-    y: number;
-    type: string;
-    img?: HTMLImageElement;
-}
-
-export interface CharacterMap {
-    id: number;
-    type: string;
-    name: string;
-    x: number;
-    y: number;
 }
 
 export interface StructureMap {
@@ -66,7 +40,7 @@ export interface StructureMap {
             }
         };
         data: (number)[][];
-        objects: CharacterMap[];
+        objects: GameObject[];
     }
 }
 
@@ -75,8 +49,8 @@ export interface Sprite {
     h: number;
     xOffset: number;
     yOffset: number;
-    scale?: number;
-    step?: number;
+    scaleOffsetX: number;
+    step: number;
     frameCount: number;
     attackFrame: number;
 }

@@ -2,86 +2,95 @@ import Canvas from "./Canvas";
 import EventBus from "../EventBus";
 import Enemy from "@/objects/Enemy";
 import Brain from "@/objects/Brain";
-import Player from "@/objects/Player";
 import Library from "@/library/Library";
-import {CharacterMap, StructureMap, Tile} from "@/types/main";
+import {StructureMap} from "@/types/main";
 import ImageManager from "@/library/ImageManager";
 import map from '../maps/map.json';
-import Character from "@/objects/Character";
 import enemies from "@/assets/data/enemies.json";
+import {GameObject} from "@/types/game";
+import Tile from "@/objects/Tile";
+import Character from "@/objects/Character";
 
 export default class World {
     private _library: Library;
     private _canvas: Canvas;
     private _bus: EventBus;
     private _brain: Brain;
-    private _player: Player;
-    private _tilemap: Tile[] = [];
-    private _characters: Character[] = [];
-    private _background: HTMLImageElement;
+    private _tilemap: GameObject[] = [];
     private _mapJson: StructureMap;
 
-    public level: number = 1;
+    public currentLevel: number = 1;
 
-    constructor(library: Library, canvas: Canvas, bus: EventBus, player: Player) {
+    public constructor(library: Library, canvas: Canvas, bus: EventBus, player: Character) {
         this._library = library;
         this._canvas = canvas;
         this._bus = bus;
         this._brain = new Brain(this._canvas, [player]);
-        this._player = player;
-        this._background = new Image();
         this._mapJson = map;
 
-        Promise.all([this.processMap(), this.processEnemies()]).then(() => {
-            this._bus.publish('world:generated', {
-                map: this._tilemap,
-                characters: this._characters,
-            });
-        });
+        this.generateWorld();
     }
 
-    public async update() {
-        this.renderBackground();
+    public async update(timestamp: number): Promise<void> {
+        await this.renderBackground();
         await this._brain.update();
 
         // отрисовка карты
-        this._tilemap.forEach((tile: Tile) => {
-            this._canvas.drawMap(tile);
+        this._tilemap.forEach((tile: Tile): void => {
+            tile.update(timestamp);
+            tile.draw();
         });
     }
 
-    private renderBackground(): void {
+    private async renderBackground(): Promise<void> {
         this._canvas.drawBackground(this._library.images().background.image);
     }
 
-    private async processEnemies(): Promise<Enemy[]> {
-        const level = map['level' + this.level]; // fix
-        const characters: CharacterMap[] = level.objects;
+    private async generateWorld(): Promise<void> {
+        await Promise.all([
+            this.processMap().then((): void => {
+                this.processEnemies();
+            }),
+        ]);
+    }
 
-        characters.forEach((obj: CharacterMap): void => {
-            const config = enemies[obj.name]; // обработать дублирование конфигов
-            const enemy: Enemy = new Enemy(this._library, this._bus, this._canvas, {...config, x: obj.x, y: obj.y});
-            enemy.id = obj.id;
+    private async processEnemies(): Promise<void> {
+        const level = map['level' + this.currentLevel]; // fix
+        const characters: Character[] = level.objects;
+
+        for (const obj: Character of characters) {
+            const config = enemies[obj.name]; // *дублирование конфигов
+            const enemy: Enemy = new Enemy(this._library,
+                this._bus,
+                this._canvas,
+                {
+                    ...config,
+                    x: obj.x,
+                    y: obj.y
+                }
+            );
+
             enemy.name = obj.name;
             enemy.movementPoints.startX = obj.x;
             enemy.movementPoints.startY = obj.y;
             enemy.movementPoints.length = 150; // movement (right | left) in px
 
+            await this._bus.publish('game:addGameEntity', enemy);
             this._brain.bindEnemy(enemy);
-            this._characters.push(enemy);
-        });
+        }
     }
 
-    public async processMap(): Promise<Tile[]> {
-        const level = map['level' + this.level]; // fix
+    private async processMap(): Promise<void> {
+        const level = map['level' + this.currentLevel]; // fix
         const mapLevelsData: [] = level.data;
 
-        const tile: Tile = {
+        const tile: GameObject = {
             w: 64,
             h: 64,
             x: 0,
             y: 0,
-            type: 'tile',
+            type: 'wall',
+            collidable: false,
         };
 
         for (const level of mapLevelsData) {
@@ -93,7 +102,19 @@ export default class World {
 
                 const img: ImageManager = this._library.tiles()['tile_' + tileNumber];
 
-                this._tilemap.push({...tile, img: img.image});
+                const tileObject: GameObject = new Tile(tile.x,
+                    tile.y,
+                    tile.w,
+                    tile.h,
+                    true,
+                    'wall',
+                    img.image,
+                    this._canvas
+                );
+
+                this._tilemap.push(tileObject);
+                await this._bus.publish('game:addGameEntity', tileObject);
+
                 tile.x += 64;
             }
 

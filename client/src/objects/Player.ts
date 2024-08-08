@@ -1,6 +1,6 @@
 import Character from "./Character";
 import EventBus from "../EventBus";
-import {IPlayer, PlayerConfig} from "@/types/game";
+import {GameObject, IPlayer, PlayerConfig} from "@/types/game";
 import Canvas from "./Canvas";
 import Library from "@/library/Library";
 
@@ -9,7 +9,6 @@ export default class Player extends Character implements IPlayer {
     private _bus: EventBus;
     private _restoreHealth: number;
     private _lastTime: number = 0;
-    private _entities: Character[] = [];
 
     public constructor
     (
@@ -17,7 +16,7 @@ export default class Player extends Character implements IPlayer {
         bus: EventBus,
         canvas: Canvas,
         config: PlayerConfig,
-        entities: Character[]
+        entities: GameObject[]
     ) {
         super(canvas, bus, library, 'player');
         this._canvas = canvas;
@@ -26,8 +25,8 @@ export default class Player extends Character implements IPlayer {
         this.id = config.id;
         this.x = config.x;
         this.y = config.y;
-        this.width = config.w;
-        this.height = config.h;
+        this.w = config.w;
+        this.h = config.h;
 
         this.name = 'player';
         this.type = config.type;
@@ -38,10 +37,7 @@ export default class Player extends Character implements IPlayer {
         this.jumpHeight = config.jumpHeight;
         this.maxJumpHeight = config.maxJumpHeight;
         this._restoreHealth = config.restoreHealth;
-        this._entities = entities;
         this.oldY = this.y;
-
-        this._bus.subscribe('player:attack', this.attack.bind(this));
     }
 
     public async update(timestamp): Promise<void> {
@@ -55,7 +51,6 @@ export default class Player extends Character implements IPlayer {
 
         const deltaTime: number = Math.floor(timestamp - this._lastTime);
 
-
         if (deltaTime >= 1000) {
             this._lastTime = timestamp;
         }
@@ -63,36 +58,5 @@ export default class Player extends Character implements IPlayer {
 
     public restoreHealth(value: number): void {
         this.health += value;
-    }
-
-    public async attack(): Promise<void> {
-        const {w: w, h: h} = await this.getSpriteDataByAnimationName('attack');
-        let startX: number;
-        let endX: number;
-
-        this.isAttack = true;
-
-        if (!this.isFacingLeft) {
-            startX = this.x + this.width / 2;
-            endX = this.x + w;
-        } else {
-            startX = (this.x + this.width) - this.width / 2;
-            endX = (this.x + this.width) - w;
-        }
-
-        for (const entity: Character of this._entities) {
-            if (entity.type === 'enemy') {
-                const {x: x, y: y, width: w, height: h} = entity;
-
-                // если противник находится в диапазоне атаки справа или слева
-                // добавить условие по y
-                if ((entity.x >= startX && entity.x <= endX) ||
-                    (entity.x + entity.width >= endX && entity.x <= startX)
-                ) {
-                    this._library.sounds('player').sword_miss.play();
-                    entity.getHurt(this.damage);
-                }
-            }
-        }
     }
 }
