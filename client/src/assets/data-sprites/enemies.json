@@ -7,8 +7,8 @@
         "xOffset": 0,
         "yOffset": 0,
         "move": 0,
-        "scale": 0,
         "step": 90,
+        "scaleOffsetX": 0,
         "framesCount": 9
       },
       "walk": {
@@ -17,8 +17,8 @@
         "xOffset": 0,
         "yOffset": 0,
         "move": 0,
-        "scale": 0,
         "step": 90,
+        "scaleOffsetX": 0,
         "framesCount": 9
       },
       "death": {
@@ -27,8 +27,8 @@
         "xOffset": 0,
         "yOffset": 0,
         "move": 0,
-        "scale": 0,
         "step": 90,
+        "scaleOffsetX": 0,
         "framesCount": 8
       },
       "hurt": {
@@ -37,8 +37,8 @@
         "xOffset": 0,
         "yOffset": 0,
         "move": 0,
-        "scale": 0,
         "step": 90,
+        "scaleOffsetX": 0,
         "framesCount": 3
       },
       "attack": {
@@ -47,8 +47,8 @@
         "xOffset": 0,
         "yOffset": 5,
         "move": 0,
-        "scale": 0,
         "step": 90,
+        "scaleOffsetX": 0,
         "framesCount": 16,
         "attackFrame": 12
       }

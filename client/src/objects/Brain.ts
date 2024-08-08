@@ -91,7 +91,7 @@ export default class Brain {
                 if (Math.abs(leftDistance) <= 0 || Math.abs(rightDistance) <= 0) {
                     if (attacker instanceof Enemy) {
                         if (!attacker.isAttack) {
-                            attacker.attack(target);
+                            attacker.attack(this._targets);
                         }
                     }
                 }

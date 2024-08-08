@@ -1,5 +1,5 @@
 import Entity from "./Entity";
-import {ICharacter} from "@/types/game";
+import {GameObject, ICharacter} from "@/types/game";
 import Animator from "./Animator";
 import Canvas from "./Canvas";
 import EventBus from "@/EventBus";
@@ -8,7 +8,7 @@ import {Sprite, SpriteList} from "@/types/main";
 import configSpritePlayer from "@/assets/data-sprites/player.json";
 import configSpriteEnemies from "@/assets/data-sprites/enemies.json";
 
-export default class Character extends Entity implements ICharacter {
+export default class Character extends Entity implements ICharacter, GameObject {
     public isIdle: boolean = false;
     public isWalk: boolean = false;
     public isMovingLeft: boolean = false;
@@ -28,6 +28,7 @@ export default class Character extends Entity implements ICharacter {
     public maxJumpQuantity: number = 2;
     public jumpHeight: number = 10;
     public maxJumpHeight: number = 10;
+    public collidable: boolean = true;
 
     // использование для класса Brain
     public movementPoints: {
@@ -45,6 +46,7 @@ export default class Character extends Entity implements ICharacter {
     protected animator: Animator;
     protected action: string = '';
 
+    private static currentId: number = 0;
     private readonly _canvas: Canvas;
     private readonly _bus: EventBus;
     protected readonly _library: Library;
@@ -55,16 +57,23 @@ export default class Character extends Entity implements ICharacter {
         this._bus = bus;
         this._library = library;
         this.type = type;
+        this.id = Character.generateId();
 
         this._bus.subscribe('animator:animationFinish', this.animationFinish.bind(this));
+
         this.setDefaultAnimation();
+    }
+
+    private static generateId(): number {
+        return this.currentId++;
     }
 
     private animationFinish(animationName: string): void {
         if (animationName === 'attack') {
-            this._library.sounds('player').sword_miss.finish();
+            this._library.sounds().swordMiss.finish();
+            this._library.sounds().swordAttack.finish();
             this.isAttack = false;
-            this._bus.publish('toggleClickState', false);
+            this._bus.publish('toggleClickState', this.isAttack);
         }
 
         if (animationName === 'death') {
@@ -117,7 +126,7 @@ export default class Character extends Entity implements ICharacter {
         };
 
         if (this.isFacingLeft) {
-            data.x = -(this.x + (this.width));
+            data.x = -(this.x + (this.w));
             temp.scaleX = -1;
         } else {
             data.x = this.x;
@@ -147,11 +156,11 @@ export default class Character extends Entity implements ICharacter {
             }
         }
 
-        if (this.isHurt) {
+        if (this.isHurt && !this.isDead) {
             this.action = 'hurt';
         }
 
-        if (this.isJump) {
+        if (this.isJump && !this.isDead) {
             this.action = 'jump';
         }
 
@@ -167,7 +176,7 @@ export default class Character extends Entity implements ICharacter {
             this.action = 'attack';
         }
 
-        let url: string = this._library.sprites()[this.name][this.action].url;
+        let url = this._library.sprites()[this.name][this.action].url;
 
         return {
             url: url,
@@ -233,13 +242,44 @@ export default class Character extends Entity implements ICharacter {
         this.oldY = this.y;
     }
 
-    public attack(): void {
+    public async attack(entities: GameObject[]): Promise<void> {
+        const {w: w, h: h} = await this.getSpriteDataByAnimationName('attack');
 
+        let startX: number;
+        let endX: number;
+
+        this.isAttack = true;
+
+        if (!this.isFacingLeft) {
+            startX = this.x + this.w / 2;
+            endX = this.x + w;
+        } else {
+            startX = (this.x + this.w) - this.w / 2;
+            endX = (this.x + this.w) - w;
+        }
+
+        for (const entity: Character of entities) {
+            const {x: x, y: y, width: w, height: h} = entity;
+
+            // если противник находится в диапазоне атаки справа или слева
+            // добавить условие по y
+            if ((entity.x >= startX && entity.x <= endX) ||
+                (entity.x + entity.w >= endX && entity.x <= startX)
+            ) {
+                if (entity instanceof Character) {
+                    console.log('da')
+                    this._library.sounds().swordAttack.play();
+                    entity.getHurt(this.damage);
+                }
+
+            }
+        }
+
+        this._library.sounds().swordMiss.play();
     }
 
     dead(): void {
         this._bus.publish('game:filterColliders');
-        console.log('death:', this);
     }
 
     getHurt(damage: number): void {
@@ -251,12 +291,11 @@ export default class Character extends Entity implements ICharacter {
         }
 
         this.isHurt = true;
-        console.log(damage)
         this.health -= damage;
     }
 
     jump(): void {
-        this._library.sounds('player').jump.play();
+        this._library.sounds().jump.play();
 
         this.jumpQuantity++;
 

@@ -5,30 +5,29 @@ import Canvas from "../objects/Canvas";
 import KeyboardController from "../controllers/KeyboardController";
 import MouseController from "../controllers/MouseController";
 import Camera from "../objects/Camera";
-import Enemy from "@/objects/Enemy";
 import Collider from "@/objects/Collider";
 import UI from "@/ui/UI";
 import Library from "@/library/Library";
 import CollisionHandler from "@/handlers/CollisionHandler";
 import Character from "@/objects/Character";
-import {filterAliveEntities, filterMapObjects} from "@/utils/utils";
-import {Tile} from "@/types/main";
 import playerConfig from "@/assets/data/player.json";
+import {GameObject} from "@/types/game";
+import Tile from "@/objects/Tile";
+import {filterAliveEntities} from "@/utils/utils";
 
 export default class Game {
     private readonly _canvas: Canvas;
     private readonly _bus: EventBus;
     private readonly _library: Library;
     private _ui: UI;
-    private _player: Player;
+    private _player: Character;
     private _world: World;
     private _camera: Camera;
     private _collider: Collider;
     private _controller: KeyboardController;
     private _mouseController: MouseController;
     private _frame;
-    private _mapObjects: (Tile | Character)[] = [];
-    private _entities: Character[] = [];
+    private _gameEntities: GameObject[] = [];
     private _gameState: string = '';
 
     public constructor(
@@ -53,74 +52,74 @@ export default class Game {
             requestAnimationFrame(this.update.bind(this));
         });
 
-        //this._library.sounds('world').light_ambient2.play();
+        this._library.sounds().lightAmbient2.play();
     }
 
     private subscribeEvents(): void {
         this._camera = new Camera(this._player, this._canvas);
         this._world = new World(this._library, this._canvas, this._bus, this._player);
 
-        this._bus.subscribe('world:generated', (data: { map: Tile[], characters: Character[] }): void => {
-            this._mapObjects = [...data.map, ...data.characters];
-            this._entities.push(...data.characters);
+        this._bus.subscribe('player:attack', (): void => {
+            this._player.attack(this._gameEntities);
         });
-
         this._bus.subscribe('toggleClickState', this._mouseController.toggleStateClick.bind(this._mouseController));
-        this._bus.subscribe('game:filterEntities', () => this._entities = filterAliveEntities(this._entities));
-        this._bus.subscribe('game:filterColliders', () => this._mapObjects = filterMapObjects(this._mapObjects));
-        // this._bus.subscribe('player:attack', (): void => {
-        //     if (!this._player.isAttack) {
-        //         this._player.attack();
-        //     }
-        // });
+        this._bus.subscribe('game:filterEntities', () => this._gameEntities = filterAliveEntities(this._gameEntities))
+        this._bus.subscribe('game:addGameEntity', (obj: GameObject) => this.addGameEntity(obj));
     }
 
     private createPlayer(): Promise<Player> {
         return new Promise((resolve): void => {
             const player: Player = new Player(
-                this._library, this._bus, this._canvas, playerConfig, this._entities
+                this._library, this._bus, this._canvas, playerConfig, this._gameEntities
             );
 
-            this._entities.push(player);
+            this._gameEntities.push(player);
             resolve(player)
-        })
+        });
+    }
+
+    private addGameEntity(obj: GameObject): void {
+        this._gameEntities.push(obj);
     }
 
     private handleCollision(): void {
-        this._entities.forEach((entity: Character): void => {
+        let collisionObjects: GameObject[] = [];
 
-            const {x: entityX, y: entityY, id: entityId, type: entityType} = entity;
+        this._gameEntities.forEach((entity: GameObject): void => {
+            if (entity instanceof Character) {
+                const {x: entityX, y: entityY, id: entityId, type: entityType} = entity;
 
-            // фильтрация массива в диапазоне 128px по x, y
-            const collideObjects = this._mapObjects.filter((obj: Tile | Character) => {
-                const {x: objX, y: objY, id: objId} = obj;
-                let objType: string = '';
+                // фильтрация массива в диапазоне 128px по x, y
+                collisionObjects = this._gameEntities.filter((obj: GameObject) => {
+                    const {x: objX, y: objY, id: objId} = obj;
+                    let objType: string = '';
 
-                // установить тип, если объект является Character
-                if (obj instanceof Character) {
-                    objType = obj.type;
-                }
+                    // установить тип, если объект является Character
+                    if (obj instanceof Character) {
+                        objType = obj.type;
+                    }
 
-                // расстояние между персонажем и объектом коллизии
-                const dx: number = Math.abs(entityX - objX);
-                const dy: number = Math.abs(entityY - objY);
+                    // расстояние между персонажем и объектом коллизии
+                    const dx: number = Math.abs(entityX - objX);
+                    const dy: number = Math.abs(entityY - objY);
 
-                return entityId !== objId && entityType !== objType && dx <= 128 && dy <= 128;
-            });
+                    return entityId !== objId && entityType !== objType && dx <= 128 && dy <= 128;
+                });
 
-            // обработка коллизии
-            collideObjects.forEach((obj: Tile | Character): void => {
-                // получить сторону коллизии или же false
-                let side: string | boolean = this._collider.checkColliding(entity, obj);
+                // обработка коллизии
+                collisionObjects.forEach((obj: GameObject): void => {
+                    // получить сторону коллизии или же false
+                    let side: string | boolean = this._collider.checkColliding(entity, obj);
 
-                if (side) {
-                    CollisionHandler.handle(entity, obj, side as string);
-                }
+                    if (side) {
+                        CollisionHandler.handle(entity, obj, side as string);
+                    }
 
-                if (!side) {
-                    CollisionHandler.handle(entity, null, side as boolean)
-                }
-            });
+                    if (!side) {
+                        CollisionHandler.handle(entity, null, side as boolean)
+                    }
+                });
+            }
         });
     }
 
@@ -130,12 +129,15 @@ export default class Game {
         await this._camera.update();
         await this.render(timestamp);
 
-        if (this._library.sounds('world').light_ambient2.ended) {
-            this._library.sounds('world').light_ambient2.replay();
+        if (this._library.sounds().lightAmbient2.ended) {
+            this._library.sounds().lightAmbient2.replay();
         }
 
-        this._entities.forEach((entity: Character): void => {
-            entity.onGround = false;
+        this._gameEntities.forEach((entity: GameObject): void => {
+            if (entity instanceof Character) {
+                entity.update(timestamp);
+                entity.onGround = false;
+            }
         });
 
         await this.handleCollision();
@@ -144,19 +146,13 @@ export default class Game {
         this._frame = window.requestAnimationFrame(this.update.bind(this));
     }
 
-    private async render(timestamp): Promise<void> {
-        await this._world.update();
-        await this._entities.forEach((entity: Character): void => {
-            entity.update(timestamp);
-        });
+    private async render(timestamp: number): Promise<void> {
+        await this._world.update(timestamp);
         await this._canvas.drawHealthPlayer(this._player.health, this._player.maxHealth);
     }
 
     public handleCharacterActionMouse(): void {
 
-        //this._bus.publish('player:attack');
-
-        //this._player.isAttack = this._mouseController.click;
     }
 
     public handleCharacterMovement(): void {

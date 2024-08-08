@@ -76,6 +76,7 @@ export default class App {
         if (event.type === 'mousedown' && event.which === 1) {
             this._mouseController.handleMouseEventDown(event);
             this._bus.publish('player:attack');
+            this._bus.publish('mouse:click');
         }
 
         // if (event.type === 'mouseup' && event.which === 1) {

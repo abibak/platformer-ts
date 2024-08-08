@@ -1,15 +1,13 @@
 import Character from "@/objects/Character";
+import {GameObject} from "@/types/game";
 
 export default class Collider {
-    public checkColliding(character: Character, obj: any): string | boolean {
-        const w = (obj instanceof Character) ? obj.width : obj.w;
-        const h = (obj instanceof Character) ? obj.height : obj.h;
+    public checkColliding(character: Character, obj: GameObject): string | boolean {
+        let dX: number = (character.x + (character.w / 2)) - (obj.x + (obj.w / 2));
+        let dY: number = (character.y + (character.h / 2)) - (obj.y + (obj.h / 2));
 
-        let dX: number = (character.x + (character.width / 2)) - (obj.x + (w / 2));
-        let dY: number = (character.y + (character.height / 2)) - (obj.y + (h / 2));
-
-        let width: number = (character.width / 2) + (w / 2);
-        let height: number = (character.height / 2) + (h / 2);
+        let width: number = (character.w / 2) + (obj.w / 2);
+        let height: number = (character.h / 2) + (obj.h / 2);
 
         // collision detected
         if (Math.abs(dY) <= height && Math.abs(dX) <= width) {
