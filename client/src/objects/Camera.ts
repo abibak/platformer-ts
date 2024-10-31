@@ -1,6 +1,6 @@
-import Entity from "./Entity";
+import Entity from "./entities/Entity";
 import Canvas from "./Canvas";
-import Character from "@/objects/Character";
+import Character from "@/objects/characters/Character";
 
 // багулина: при движении камеры по время коллизии, не правильно отрисовывается мир
 

@@ -1,8 +1,8 @@
-import Character from "@/objects/Character";
+import Character from "@/objects/characters/Character";
 import {GameObject} from "@/types/game";
 
 export default class Collider {
-    public checkColliding(character: Character, obj: GameObject): string | boolean {
+    public checkColliding(character: Character, obj: GameObject): {side: string, objCol: GameObject} | boolean {
         let dX: number = (character.x + (character.w / 2)) - (obj.x + (obj.w / 2));
         let dY: number = (character.y + (character.h / 2)) - (obj.y + (obj.h / 2));
 
@@ -17,19 +17,31 @@ export default class Collider {
             if (x >= y) {
                 if (dY > 0) {
                     character.y += height - Math.abs(dY); // top side
-                    return 'top';
+                    return {
+                        side: 'top',
+                        objCol: obj,
+                    }
                 } else {
                     character.y -= height - Math.abs(dY); // bottom side
                     character.onGround = true;
-                    return 'bottom';
+                    return {
+                        side: 'bottom',
+                        objCol: obj,
+                    }
                 }
             } else {
                 if (dX <= 0) {
                     character.x -= width - Math.abs(dX); // right side
-                    return 'right';
+                    return {
+                        side: 'right',
+                        objCol: obj,
+                    }
                 } else {
                     character.x += width - Math.abs(dX); // left side
-                    return 'left';
+                    return {
+                        side: 'left',
+                        objCol: obj,
+                    }
                 }
             }
         }

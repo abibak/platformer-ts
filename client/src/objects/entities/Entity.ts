@@ -8,8 +8,8 @@ export default class Entity implements IEntity {
     private _height: number;
     private _oldY: number = 0;
 
-    protected health: number;
-    protected maxHealth: number;
+    public health: number;
+    public maxHealth: number;
     protected damage: number;
     public type: string;
     public name: string;

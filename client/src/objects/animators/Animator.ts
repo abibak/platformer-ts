@@ -1,4 +1,4 @@
-import Canvas from "./Canvas";
+import Canvas from "../Canvas";
 import {AnimationRenderParams} from "@/types/game";
 import EventBus from "@/EventBus";
 

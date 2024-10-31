@@ -1,5 +1,5 @@
 import AudioManager from "@/library/AudioManager";
-import Character from "@/objects/Character";
+import Character from "@/objects/characters/Character";
 import {GameObject} from "@/types/game";
 
 /* Event Bus */

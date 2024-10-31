@@ -1,7 +1,7 @@
-import Entity from "./Entity";
+import Entity from "../entities/Entity";
 import {GameObject, ICharacter} from "@/types/game";
-import Animator from "./Animator";
-import Canvas from "./Canvas";
+import Animator from "../animators/Animator";
+import Canvas from "../Canvas";
 import EventBus from "@/EventBus";
 import Library from "@/library/Library";
 import {Sprite, SpriteList} from "@/types/main";
@@ -21,7 +21,7 @@ export default class Character extends Entity implements ICharacter, GameObject 
     public stats: {
         coins: number;
     }
-    public speed: number = 5;
+    public speed: number;
     public speedMultiplier: number = 1;
     public isJump: boolean = false;
     public jumpQuantity: number = 0;
@@ -30,7 +30,7 @@ export default class Character extends Entity implements ICharacter, GameObject 
     public maxJumpHeight: number = 10;
     public collidable: boolean = true;
 
-    // использование для класса Brain
+    // для класса Brain
     public movementPoints: {
         length: number,
         startX: number,
@@ -41,7 +41,7 @@ export default class Character extends Entity implements ICharacter, GameObject 
     public collisionY: string = '';
 
     protected vy: number = 0;
-    protected gravity: number = 0.4;
+    protected gravity: number = 0.45;
 
     protected animator: Animator;
     protected action: string = '';
@@ -61,7 +61,7 @@ export default class Character extends Entity implements ICharacter, GameObject 
 
         this._bus.subscribe('animator:animationFinish', this.animationFinish.bind(this));
 
-        this.setDefaultAnimation();
+        this.setInstanceAnimation();
     }
 
     private static generateId(): number {
@@ -85,9 +85,9 @@ export default class Character extends Entity implements ICharacter, GameObject 
         }
     }
 
-    public async update(timestamp): Promise<void> {
-        this.adjustVerticalMovement();
-        this.adjustHorizontalMovement();
+    public async update(timestamp: number, dt: number): Promise<void> {
+        this.adjustVerticalMovement(dt);
+        this.adjustHorizontalMovement(dt);
 
         let frameList: SpriteList;
         let frameEvents;
@@ -137,8 +137,6 @@ export default class Character extends Entity implements ICharacter, GameObject 
     }
 
     public async updateAnimation(): Promise<any> {
-        // let animation: string = '';
-
         if (this.isDead) {
             this.action = 'death';
         }
@@ -184,8 +182,7 @@ export default class Character extends Entity implements ICharacter, GameObject 
         }
     }
 
-    // rename to "setInstanceAnimation"
-    public setDefaultAnimation(): void {
+    public setInstanceAnimation(): void {
         this.animator = new Animator(this._canvas, this._bus, this.type);
     }
 
@@ -211,23 +208,23 @@ export default class Character extends Entity implements ICharacter, GameObject 
         this.isMovingRight = false;
     }
 
-    protected adjustVerticalMovement(): void {
-        this.fall();
+    protected adjustVerticalMovement(dt: number): void {
+        this.fall(dt);
     }
 
-    protected adjustHorizontalMovement(): void {
+    protected adjustHorizontalMovement(dt: number): void {
         if (!this.isDead) {
             if (this.isMovingLeft && !this.isAttack) {
-                this.x -= this.speed * this.speedMultiplier;
+                this.x -= (this.speed * this.speedMultiplier) * dt;
             }
 
             if (this.isMovingRight && !this.isAttack) {
-                this.x += this.speed * this.speedMultiplier;
+                this.x += (this.speed * this.speedMultiplier) * dt;
             }
         }
     }
 
-    public fall(): void {
+    public fall(dt: number): void {
         // Cвободное падения
         if (!this.onGround) {
             this.vy += this.gravity;
@@ -267,7 +264,6 @@ export default class Character extends Entity implements ICharacter, GameObject 
                 (entity.x + entity.w >= endX && entity.x <= startX)
             ) {
                 if (entity instanceof Character) {
-                    console.log('da')
                     this._library.sounds().swordAttack.play();
                     entity.getHurt(this.damage);
                 }
@@ -279,13 +275,13 @@ export default class Character extends Entity implements ICharacter, GameObject 
     }
 
     dead(): void {
+        this.isDead = true;
         this._bus.publish('game:filterColliders');
     }
 
     getHurt(damage: number): void {
         if (damage >= this.health) {
             this.health = 0;
-            this.isDead = true;
             this.dead();
             return;
         }
@@ -299,7 +295,7 @@ export default class Character extends Entity implements ICharacter, GameObject 
 
         this.jumpQuantity++;
 
-        if (this.jumpQuantity === 2) {
+        if (this.jumpQuantity >= this.maxJumpQuantity) {
             this.jumpHeight = (0.8 * this.jumpHeight);
         }
 

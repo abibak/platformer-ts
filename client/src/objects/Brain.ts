@@ -1,7 +1,7 @@
-import Character from "@/objects/Character";
+import Character from "@/objects/characters/Character";
 import {AutomatedCharacter} from "@/types/main";
-import Enemy from "@/objects/Enemy";
-import Player from "@/objects/Player";
+import Enemy from "@/objects/characters/Enemy";
+import Player from "@/objects/characters/Player";
 
 export default class Brain {
     private _characters: AutomatedCharacter[] = [];
@@ -34,7 +34,7 @@ export default class Brain {
     private processTargetDetection(obj: AutomatedCharacter): void {
         const attacker: Character = obj.character;
         const range: number = 300; // temp
-        const centerHorizontalPoint: number = attacker.x + (attacker.width / 2);
+        const centerHorizontalPoint: number = attacker.x + (attacker.w / 2);
         const leftRange: number = centerHorizontalPoint - range;
         const rightRange: number = centerHorizontalPoint + range;
 
@@ -44,16 +44,15 @@ export default class Brain {
 
         this._targets.forEach((target: Player): void => {
             const {x: x, y: y, width: w, height: h} = target;
-
             // если цель находится в диапазоне двух значений от центра объекта и если цель находится в диапазоне высоты объекта
             if ((x + w >= leftRange && x + w <= rightRange) &&
-                (target.y + target.height) >= attacker.y && (target.y) <= (attacker.y + attacker.height)) {
+                (target.y + target.h) >= attacker.y && (target.y) <= (attacker.y + attacker.h)) {
                 attacker.isMovingLeft = false;
                 attacker.isMovingRight = false;
                 obj.target = target;
 
-                const lTempX: number = target.x + target.width;
-                const rTempX: number = target.x - attacker.width;
+                const lTempX: number = target.x + target.w;
+                const rTempX: number = target.x - attacker.w;
 
                 let rightDistance: number = attacker.x - rTempX;
                 let leftDistance: number = attacker.x - lTempX;
