@@ -1,6 +1,6 @@
 import {IEnemy} from "@/types/game";
 import Canvas from "@/objects/Canvas";
-import Character from "@/objects/Character";
+import Character from "@/objects/characters/Character";
 import EventBus from "@/EventBus";
 import Library from "@/library/Library";
 
@@ -27,6 +27,7 @@ export default class Enemy extends Character implements IEnemy {
         this.health = config.health;
         this.maxHealth = config.maxHealth;
         this.damage = config.damage;
+        this.speed = config.speed;
 
         this.jumpHeight = 50;
         this.maxJumpHeight = 20;
@@ -36,8 +37,8 @@ export default class Enemy extends Character implements IEnemy {
         });
     }
 
-    public async update(timestamp): Promise<void> {
-        super.update(timestamp);
+    public async update(timestamp: number, dt: number): Promise<void> {
+        super.update(timestamp, dt);
 
         this._canvas.drawHealthEnemy({
             x: this.x,

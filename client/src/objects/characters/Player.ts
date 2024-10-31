@@ -1,7 +1,7 @@
 import Character from "./Character";
-import EventBus from "../EventBus";
+import EventBus from "../../EventBus";
 import {GameObject, IPlayer, PlayerConfig} from "@/types/game";
-import Canvas from "./Canvas";
+import Canvas from "../Canvas";
 import Library from "@/library/Library";
 
 export default class Player extends Character implements IPlayer {
@@ -36,12 +36,13 @@ export default class Player extends Character implements IPlayer {
         this.damage = config.damage;
         this.jumpHeight = config.jumpHeight;
         this.maxJumpHeight = config.maxJumpHeight;
+        this.maxJumpQuantity = config.maxJumpQuantity;
         this._restoreHealth = config.restoreHealth;
         this.oldY = this.y;
     }
 
-    public async update(timestamp): Promise<void> {
-        super.update(timestamp);
+    public async update(timestamp: number, dt: number): Promise<void> {
+        super.update(timestamp, dt);
 
         await this._canvas.drawHealthPlayer(this.health, this.maxHealth);
 

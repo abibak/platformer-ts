@@ -1,6 +1,6 @@
 /* UI Button options */
 import {GameObject} from "@/types/game";
-import Tile from "@/objects/Tile";
+import Tile from "@/objects/world/Tile";
 
 type ButtonOptions = {
     x: number;
@@ -80,11 +80,6 @@ export default class Canvas {
         this._ctx.drawImage(tile.img, tile.x, tile.y, tile.w, tile.h);
     }
 
-    // отрисовка объектов карты
-    public drawMap(platform): void {
-        this._ctx.drawImage(platform.img, platform.x, platform.y, platform.w, platform.h);
-    }
-
     public drawAnimation(params): void {
         this._ctx.save();
 
@@ -146,5 +141,10 @@ export default class Canvas {
             this._ctx.fillStyle = 'red';
             this._ctx.fillRect(301, 301, (progress * 4) - 2, 10);
         }, 10);
+    }
+
+    public drawNearbyTiles(tile) {
+        this._ctx.fillStyle = 'red';
+        this._ctx.fillRect(tile.x, tile.y, tile.w, tile.h);
     }
 }

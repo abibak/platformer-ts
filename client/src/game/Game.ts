@@ -1,5 +1,5 @@
-import Player from "../objects/Player";
-import World from '../objects/World';
+import Player from "../objects/characters/Player";
+import World from '../objects/world/World';
 import EventBus from "../EventBus";
 import Canvas from "../objects/Canvas";
 import KeyboardController from "../controllers/KeyboardController";
@@ -9,11 +9,10 @@ import Collider from "@/objects/Collider";
 import UI from "@/ui/UI";
 import Library from "@/library/Library";
 import CollisionHandler from "@/handlers/CollisionHandler";
-import Character from "@/objects/Character";
+import Character from "@/objects/characters/Character";
 import playerConfig from "@/assets/data/player.json";
 import {GameObject} from "@/types/game";
-import Tile from "@/objects/Tile";
-import {filterAliveEntities} from "@/utils/utils";
+import {filterAliveEntities, time} from "@/utils/utils";
 
 export default class Game {
     private readonly _canvas: Canvas;
@@ -26,9 +25,12 @@ export default class Game {
     private _collider: Collider;
     private _controller: KeyboardController;
     private _mouseController: MouseController;
-    private _frame;
     private _gameEntities: GameObject[] = [];
     private _gameState: string = '';
+
+    private _frame;
+    private _lastTime: number = 0;
+    private tickRate: number = 1000 / 60;
 
     public constructor(
         library: Library,
@@ -52,7 +54,7 @@ export default class Game {
             requestAnimationFrame(this.update.bind(this));
         });
 
-        this._library.sounds().lightAmbient2.play();
+        // this._library.sounds().lightAmbient2.play();
     }
 
     private subscribeEvents(): void {
@@ -103,20 +105,31 @@ export default class Game {
                     const dx: number = Math.abs(entityX - objX);
                     const dy: number = Math.abs(entityY - objY);
 
-                    return entityId !== objId && entityType !== objType && dx <= 128 && dy <= 128;
+                    if (entityId !== objId && entityType !== objType && dx <= 128 && dy <= 128) {
+                        return true;
+                    }
                 });
+
+                //console.log(collisionObjects)
 
                 // обработка коллизии
                 collisionObjects.forEach((obj: GameObject): void => {
+                    this._canvas.drawNearbyTiles(obj);
                     // получить сторону коллизии или же false
-                    let side: string | boolean = this._collider.checkColliding(entity, obj);
 
-                    if (side) {
-                        CollisionHandler.handle(entity, obj, side as string);
+                    let data: {
+                        side: string,
+                        objCol?: GameObject
+                    } | boolean = this._collider.checkColliding(entity, obj);
+
+                    if (typeof data !== "boolean") {
+                        if (data.side) {
+                            CollisionHandler.handle(entity, obj, data.side);
+                        }
                     }
 
-                    if (!side) {
-                        CollisionHandler.handle(entity, null, side as boolean)
+                    if (typeof data === "boolean") {
+                        CollisionHandler.handle(entity, null, data);
                     }
                 });
             }
@@ -124,25 +137,39 @@ export default class Game {
     }
 
     private async update(timestamp): Promise<void> {
+        if (!this._lastTime) {
+            this._lastTime = timestamp;
+        }
+
+        const dt: number = (timestamp - this._lastTime) / 1000;
+        
+        this._lastTime = timestamp;
+
         this._canvas.clearCanvas();
 
         await this._camera.update();
         await this.render(timestamp);
 
-        if (this._library.sounds().lightAmbient2.ended) {
-            this._library.sounds().lightAmbient2.replay();
+        for (const obj: GameObject of this._gameEntities) {
+            if (obj instanceof Character) {
+                await obj.update(timestamp, dt);
+                obj.onGround = false;
+            }
         }
 
-        this._gameEntities.forEach((entity: GameObject): void => {
-            if (entity instanceof Character) {
-                entity.update(timestamp);
-                entity.onGround = false;
-            }
-        });
+        // this._gameEntities.forEach((entity: GameObject): void => {
+        //
+        // });
 
         await this.handleCollision();
         await this.handleCharacterActionMouse();
         await this.handleCharacterMovement();
+
+
+        if (this._library.sounds().lightAmbient2.ended) {
+            this._library.sounds().lightAmbient2.replay();
+        }
+
         this._frame = window.requestAnimationFrame(this.update.bind(this));
     }
 

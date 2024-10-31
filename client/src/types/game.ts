@@ -1,4 +1,4 @@
-import Character from "@/objects/Character";
+import Character from "@/objects/characters/Character";
 
 export interface IEntity {
     type: string;

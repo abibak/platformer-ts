@@ -1,15 +1,15 @@
-import Canvas from "./Canvas";
-import EventBus from "../EventBus";
-import Enemy from "@/objects/Enemy";
+import Canvas from "../Canvas";
+import EventBus from "../../EventBus";
+import Enemy from "@/objects/characters/Enemy";
 import Brain from "@/objects/Brain";
 import Library from "@/library/Library";
 import {StructureMap} from "@/types/main";
 import ImageManager from "@/library/ImageManager";
-import map from '../maps/map.json';
+import map from '../../maps/map.json';
 import enemies from "@/assets/data/enemies.json";
 import {GameObject} from "@/types/game";
-import Tile from "@/objects/Tile";
-import Character from "@/objects/Character";
+import Tile from "@/objects/world/Tile";
+import Character from "@/objects/characters/Character";
 
 export default class World {
     private _library: Library;
