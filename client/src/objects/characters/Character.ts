@@ -1,5 +1,5 @@
 import Entity from "../entities/Entity";
-import {GameObject, ICharacter} from "@/types/game";
+import {ICharacter} from "@/types/game";
 import Animator from "../animators/Animator";
 import Canvas from "../Canvas";
 import EventBus from "@/EventBus";
@@ -7,8 +7,9 @@ import Library from "@/library/Library";
 import {Sprite, SpriteList} from "@/types/main";
 import configSpritePlayer from "@/assets/data-sprites/player.json";
 import configSpriteEnemies from "@/assets/data-sprites/enemies.json";
+import GameObject from "@/objects/GameObject";
 
-export default class Character extends Entity implements ICharacter, GameObject {
+export default class Character extends Entity implements ICharacter {
     public isIdle: boolean = false;
     public isWalk: boolean = false;
     public isMovingLeft: boolean = false;
@@ -47,9 +48,10 @@ export default class Character extends Entity implements ICharacter, GameObject 
     protected action: string = '';
 
     private static currentId: number = 0;
-    private readonly _canvas: Canvas;
-    private readonly _bus: EventBus;
+
+    protected readonly _bus: EventBus;
     protected readonly _library: Library;
+    protected readonly _canvas: Canvas;
 
     public constructor(canvas: Canvas, bus: EventBus, library: Library, type: string) {
         super();

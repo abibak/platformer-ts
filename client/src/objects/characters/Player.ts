@@ -1,12 +1,11 @@
 import Character from "./Character";
 import EventBus from "../../EventBus";
-import {GameObject, IPlayer, PlayerConfig} from "@/types/game";
+import {IPlayer, PlayerConfig} from "@/types/game";
 import Canvas from "../Canvas";
 import Library from "@/library/Library";
+import GameObject from "@/objects/GameObject";
 
 export default class Player extends Character implements IPlayer {
-    private _canvas: Canvas;
-    private _bus: EventBus;
     private _restoreHealth: number;
     private _lastTime: number = 0;
 
@@ -19,8 +18,6 @@ export default class Player extends Character implements IPlayer {
         entities: GameObject[]
     ) {
         super(canvas, bus, library, 'player');
-        this._canvas = canvas;
-        this._bus = bus;
 
         this.id = config.id;
         this.x = config.x;
