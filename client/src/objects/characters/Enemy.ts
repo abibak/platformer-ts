@@ -5,8 +5,6 @@ import EventBus from "@/EventBus";
 import Library from "@/library/Library";
 
 export default class Enemy extends Character implements IEnemy {
-    private _canvas: Canvas;
-    private _bus: EventBus;
     public speed: number = 1.05;
 
     public constructor(
@@ -16,8 +14,6 @@ export default class Enemy extends Character implements IEnemy {
         config: any,
     ) {
         super(canvas, bus, library, 'enemy');
-        this._canvas = canvas;
-        this._bus = bus;
         this.type = 'enemy';
 
         this.x = config.x;

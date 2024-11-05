@@ -11,8 +11,8 @@ import Library from "@/library/Library";
 import CollisionHandler from "@/handlers/CollisionHandler";
 import Character from "@/objects/characters/Character";
 import playerConfig from "@/assets/data/player.json";
-import {GameObject} from "@/types/game";
-import {filterAliveEntities, time} from "@/utils/utils";
+import {filterAliveEntities} from "@/utils/utils";
+import GameObject from "@/objects/GameObject";
 
 export default class Game {
     private readonly _canvas: Canvas;
@@ -150,7 +150,7 @@ export default class Game {
         await this._camera.update();
         await this.render(timestamp);
 
-        for (const obj: GameObject of this._gameEntities) {
+        for (const obj of this._gameEntities) {
             if (obj instanceof Character) {
                 await obj.update(timestamp, dt);
                 obj.onGround = false;

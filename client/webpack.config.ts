@@ -19,7 +19,7 @@ function devServer(env: any): IDevServer {
 export default (env: IEnvVariables) => {
     const config: webpack.Configuration = {
         entry: '/src/index.ts',
-        mode: env.mode,
+        mode: 'development',
         module: {
             rules: [
                 {

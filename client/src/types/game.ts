@@ -13,7 +13,6 @@ export interface ICharacter extends IEntity {
         coins: number;
     }
     isJump: boolean;
-    damage: number;
     isDead: boolean;
     isFall: boolean;
 
@@ -62,16 +61,6 @@ export interface PlayerConfig {
     maxHealth: number;
     damage: number;
     restoreHealth: number;
-}
-
-export interface GameObject {
-    x: number;
-    y: number;
-    h: number;
-    w: number;
-    collidable: boolean;
-    type: string;
-    img?: HTMLImageElement;
 }
 
 export enum PlayerState {
