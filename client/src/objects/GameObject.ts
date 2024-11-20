@@ -6,6 +6,15 @@ export default abstract class GameObject {
     private _height: number;
     public collidable: boolean;
 
+    public constructor(id: number, x: number, y: number, width: number, height: number, collidable: boolean) {
+        this._id = id;
+        this._x = x;
+        this._y = y;
+        this._width = width;
+        this._height = height;
+        this.collidable = collidable;
+    }
+
     public get id() {
         return this._id;
     }
@@ -44,5 +53,29 @@ export default abstract class GameObject {
 
     public set h(value: number) {
         this._height = value;
+    }
+
+    public centerX(): number {
+        return this._x + this._width;
+    }
+
+    public centerY(): number {
+        return this._y + this._height;
+    }
+
+    public top(): number {
+        return this._y;
+    }
+
+    public bottom(): number {
+        return this._y + this._height;
+    }
+
+    public left(): number {
+        return this._x;
+    }
+
+    public right(): number {
+        return this.x + this._width;
     }
 }

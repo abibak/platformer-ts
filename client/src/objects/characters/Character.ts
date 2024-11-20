@@ -36,7 +36,11 @@ export default class Character extends Entity implements ICharacter {
         length: number,
         startX: number,
         startY: number,
-    } = {};
+    } = {
+        length: 0,
+        startX: 0,
+        startY: 0,
+    };
 
     public collisionX: string = '';
     public collisionY: string = '';

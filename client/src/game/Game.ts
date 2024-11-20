@@ -59,7 +59,7 @@ export default class Game {
 
     private subscribeEvents(): void {
         this._camera = new Camera(this._player, this._canvas);
-        this._world = new World(this._library, this._canvas, this._bus, this._player);
+        this._world = new World(5,5, this._library, this._canvas, this._bus, this._player);
 
         this._bus.subscribe('player:attack', (): void => {
             this._player.attack(this._gameEntities);
