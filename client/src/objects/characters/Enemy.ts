@@ -24,7 +24,6 @@ export default class Enemy extends Character implements IEnemy {
         this.maxHealth = config.maxHealth;
         this.damage = config.damage;
         this.speed = config.speed;
-
         this.jumpHeight = 50;
         this.maxJumpHeight = 20;
 

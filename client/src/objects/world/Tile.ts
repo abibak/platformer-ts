@@ -1,26 +1,18 @@
-import {GameObject} from "@/types/game";
 import Canvas from "@/objects/Canvas";
+import GameObject from "@/objects/GameObject";
 
-type TileTypes = 'wall' | 'grass' | 'stone'
+type TileTypes = 0 | 1;
 
-export default class Tile implements GameObject {
-    public x: number;
-    public y: number;
-    public w: number;
-    public h: number;
-    public collidable: boolean;
-    public type: TileTypes;
+export default class Tile extends GameObject {
+    private static _staticId: number = 0;
+    public type: TileTypes = 0;
     public img: HTMLImageElement;
 
     private readonly _canvas: Canvas;
 
-    public constructor(x: number, y: number, w: number, h: number, collidable: boolean, type: TileTypes, img: HTMLImageElement, canvas: Canvas) {
-        this.x = x;
-        this.y = y;
-        this.w = w;
-        this.h = h;
-        this.collidable = collidable;
-        this.type = type;
+    public constructor(x: number, y: number, w: number, h: number, collidable: boolean, img: HTMLImageElement, canvas: Canvas) {
+        Tile._staticId += 1;
+        super(Tile._staticId, x, y, w, h, collidable);
         this.img = img;
         this._canvas = canvas;
     }

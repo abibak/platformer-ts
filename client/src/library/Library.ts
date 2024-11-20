@@ -70,8 +70,8 @@ export default class Library implements Library {
         const promises: AllowPromises[] = [];
 
         // вынести в метод загрузки спрайтов
-        for (const key: string of Object.keys(this._sprites)) {
-            for (const obj: ImageManager of Object.values(this._sprites[key])) {
+        for (const key of Object.keys(this._sprites)) {
+            for (const obj of Object.values(this._sprites[key])) {
                 promises.push(obj)
             }
         }
@@ -86,7 +86,7 @@ export default class Library implements Library {
 
             this._needLoad = promises.length;
 
-            for (const promise: (AudioManager | ImageManager) of promises) {
+            for (const promise of promises) {
                 if (this._loadError) {
                     break;
                 }
