@@ -7,7 +7,7 @@ import Library from "@/library/Library";
 import {Sprite, SpriteList} from "@/types/main";
 import configSpritePlayer from "@/assets/data-sprites/player.json";
 import configSpriteEnemies from "@/assets/data-sprites/enemies.json";
-import GameObject from "@/objects/GameObject";
+import GameObject from "@/objects/world/GameObject";
 
 export default class Character extends Entity implements ICharacter {
     public isIdle: boolean = false;
@@ -92,8 +92,8 @@ export default class Character extends Entity implements ICharacter {
     }
 
     public async update(timestamp: number, dt: number): Promise<void> {
-        this.adjustVerticalMovement(dt);
-        this.adjustHorizontalMovement(dt);
+        //this.adjustVerticalMovement(dt);
+        //this.adjustHorizontalMovement(dt);
 
         let frameList: SpriteList;
         let frameEvents;
@@ -215,7 +215,7 @@ export default class Character extends Entity implements ICharacter {
     }
 
     protected adjustVerticalMovement(dt: number): void {
-        this.fall(dt);
+        //this.fall(dt);
     }
 
     protected adjustHorizontalMovement(dt: number): void {

@@ -3,11 +3,12 @@ import EventBus from "../../EventBus";
 import {IPlayer, PlayerConfig} from "@/types/game";
 import Canvas from "../Canvas";
 import Library from "@/library/Library";
-import GameObject from "@/objects/GameObject";
+import GameObject from "@/objects/world/GameObject";
 
 export default class Player extends Character implements IPlayer {
     private _restoreHealth: number;
     private _lastTime: number = 0;
+    public mode: 'debug' | 'default' = 'default';
 
     public constructor
     (

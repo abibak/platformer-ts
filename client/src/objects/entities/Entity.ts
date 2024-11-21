@@ -1,5 +1,5 @@
 import {IEntity} from "@/types/game";
-import GameObject from "@/objects/GameObject";
+import GameObject from "@/objects/world/GameObject";
 
 export default class Entity extends GameObject implements IEntity {
     private _oldY: number = 0;

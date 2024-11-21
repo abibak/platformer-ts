@@ -1,5 +1,5 @@
 import Character from "@/objects/characters/Character";
-import {GameObject} from "@/types/game";
+import GameObject from "@/objects/world/GameObject";
 
 export default class Collider {
     public checkColliding(character: Character, obj: GameObject): {side: string, objCol: GameObject} | boolean {

@@ -1,5 +1,5 @@
 import Canvas from "@/objects/Canvas";
-import GameObject from "@/objects/GameObject";
+import GameObject from "@/objects/world/GameObject";
 
 type TileTypes = 0 | 1;
 
@@ -22,12 +22,14 @@ export default class Tile extends GameObject {
     }
 
     public async draw(): Promise<void> {
-        this._canvas.drawTile({
-            x: this.x,
-            y: this.y,
-            w: this.w,
-            h: this.h,
-            img: this.img
-        });
+        if (this.type === 1) {
+            this._canvas.drawTile({
+                x: this.x,
+                y: this.y,
+                w: this.w,
+                h: this.h,
+                img: this.img
+            });
+        }
     }
 }

@@ -12,20 +12,20 @@ import CollisionHandler from "@/handlers/CollisionHandler";
 import Character from "@/objects/characters/Character";
 import playerConfig from "@/assets/data/player.json";
 import {filterAliveEntities} from "@/utils/utils";
-import GameObject from "@/objects/GameObject";
+import GameObject from "@/objects/world/GameObject";
 
 export default class Game {
     private readonly _canvas: Canvas;
     private readonly _bus: EventBus;
     private readonly _library: Library;
     private _ui: UI;
-    private _player: Character;
+    private _player: Player;
     private _world: World;
     private _camera: Camera;
     private _collider: Collider;
     private _controller: KeyboardController;
     private _mouseController: MouseController;
-    private _gameEntities: GameObject[] = [];
+    private _gameObjects: GameObject[] = [];
     private _gameState: string = '';
 
     private _frame;
@@ -58,41 +58,42 @@ export default class Game {
     }
 
     private subscribeEvents(): void {
+        // добавить произвольную функцию (init), обернуть каждую операцию в promise
         this._camera = new Camera(this._player, this._canvas);
-        this._world = new World(5,5, this._library, this._canvas, this._bus, this._player);
-
+        this._world = new World(3,3, this._library, this._canvas, this._bus, this._player);
         this._bus.subscribe('player:attack', (): void => {
-            this._player.attack(this._gameEntities);
+            this._player.attack(this._gameObjects);
         });
         this._bus.subscribe('toggleClickState', this._mouseController.toggleStateClick.bind(this._mouseController));
-        this._bus.subscribe('game:filterEntities', () => this._gameEntities = filterAliveEntities(this._gameEntities))
+        this._bus.subscribe('game:filterEntities', () => this._gameObjects = filterAliveEntities(this._gameObjects))
         this._bus.subscribe('game:addGameEntity', (obj: GameObject) => this.addGameEntity(obj));
     }
 
     private createPlayer(): Promise<Player> {
         return new Promise((resolve): void => {
             const player: Player = new Player(
-                this._library, this._bus, this._canvas, playerConfig, this._gameEntities
+                this._library, this._bus, this._canvas, playerConfig, this._gameObjects
             );
+            player.mode = 'debug';
 
-            this._gameEntities.push(player);
+            this._gameObjects.push(player);
             resolve(player)
         });
     }
 
     private addGameEntity(obj: GameObject): void {
-        this._gameEntities.push(obj);
+        this._gameObjects.push(obj);
     }
 
     private handleCollision(): void {
         let collisionObjects: GameObject[] = [];
 
-        this._gameEntities.forEach((entity: GameObject): void => {
+        this._gameObjects.forEach((entity: GameObject): void => {
             if (entity instanceof Character) {
                 const {x: entityX, y: entityY, id: entityId, type: entityType} = entity;
 
                 // фильтрация массива в диапазоне 128px по x, y
-                collisionObjects = this._gameEntities.filter((obj: GameObject) => {
+                collisionObjects = this._gameObjects.filter((obj: GameObject) => {
                     const {x: objX, y: objY, id: objId} = obj;
                     let objType: string = '';
 
@@ -101,7 +102,7 @@ export default class Game {
                         objType = obj.type;
                     }
 
-                    // расстояние между персонажем и объектом коллизии
+                    // расстояние между объектами
                     const dx: number = Math.abs(entityX - objX);
                     const dy: number = Math.abs(entityY - objY);
 
@@ -109,34 +110,33 @@ export default class Game {
                         return true;
                     }
                 });
-
-                //console.log(collisionObjects)
-
+                
                 // обработка коллизии
                 collisionObjects.forEach((obj: GameObject): void => {
                     this._canvas.drawNearbyTiles(obj);
-                    // получить сторону коллизии или же false
 
-                    let data: {
-                        side: string,
-                        objCol?: GameObject
-                    } | boolean = this._collider.checkColliding(entity, obj);
+                    if (!obj.collidable) {
+                        return;
+                    }
 
-                    if (typeof data !== "boolean") {
-                        if (data.side) {
-                            CollisionHandler.handle(entity, obj, data.side);
+                    // определить сторону коллизии или же false
+                    let sideCol = this._collider.checkColliding(entity, obj);
+
+                    if (typeof sideCol !== "boolean") {
+                        if (sideCol.side) {
+                            CollisionHandler.handle(entity, obj, sideCol.side);
                         }
                     }
 
-                    if (typeof data === "boolean") {
-                        CollisionHandler.handle(entity, null, data);
+                    if (typeof sideCol === "boolean") {
+                        CollisionHandler.handle(entity, null, sideCol);
                     }
                 });
             }
         });
     }
 
-    private async update(timestamp): Promise<void> {
+    private async update(timestamp: number): Promise<void> {
         if (!this._lastTime) {
             this._lastTime = timestamp;
         }
@@ -150,14 +150,14 @@ export default class Game {
         await this._camera.update();
         await this.render(timestamp);
 
-        for (const obj of this._gameEntities) {
+        for (const obj of this._gameObjects) {
             if (obj instanceof Character) {
                 await obj.update(timestamp, dt);
                 obj.onGround = false;
             }
         }
 
-        // this._gameEntities.forEach((entity: GameObject): void => {
+        // this._gameObjects.forEach((entity: GameObject): void => {
         //
         // });
 
@@ -182,7 +182,7 @@ export default class Game {
 
     }
 
-    public handleCharacterMovement(): void {
+    public defaultPlayerMovement(): void {
         if (this._controller.jump) {
             this._player.jump();
             this._player.isJump = true;
@@ -200,6 +200,34 @@ export default class Game {
             this._player.startMovingRight();
         } else {
             this._player.stopMovingRight();
+        }
+    }
+
+    public debugPlayerMovement(): void {
+        const speed = 15;
+
+        if (this._controller.top) {
+            this._player.y -= speed;
+        }
+
+        if (this._controller.down) {
+            this._player.y += speed;
+        }
+
+        if (this._controller.left) {
+            this._player.x -= speed;
+        }
+
+        if (this._controller.right) {
+            this._player.x += speed;
+        }
+    }
+
+    public handleCharacterMovement(): void {
+        if (this._player.mode === 'default') {
+            this.defaultPlayerMovement()
+        } else {
+            this.debugPlayerMovement();
         }
     }
 }

@@ -1,15 +1,9 @@
 import Canvas from "../Canvas";
 import EventBus from "../../EventBus";
-import Enemy from "@/objects/characters/Enemy";
 import Brain from "@/objects/Brain";
 import Library from "@/library/Library";
-import {StructureMap} from "@/types/main";
-import ImageManager from "@/library/ImageManager";
-import map from '../../maps/map.json';
-import enemies from "@/assets/data/enemies.json";
 import Tile from "@/objects/world/Tile";
 import Character from "@/objects/characters/Character";
-import GameObject from "@/objects/GameObject";
 import Chunk from "@/objects/world/Chunk";
 
 export default class World {
@@ -21,10 +15,6 @@ export default class World {
     private _canvas: Canvas;
     private _bus: EventBus;
     private _brain: Brain;
-    //private _tilemap: Tile[] = [];
-    //private _mapJson: StructureMap;
-
-    public currentLevel: number = 1;
 
     public constructor(width: number, height: number, library: Library, canvas: Canvas, bus: EventBus, player: Character) {
         this._width = width;
@@ -33,7 +23,6 @@ export default class World {
         this._canvas = canvas;
         this._bus = bus;
         this._brain = new Brain(this._canvas, [player]);
-        //this._mapJson = map;
 
         this.generateWorld();
     }
@@ -43,8 +32,7 @@ export default class World {
         await this._brain.update();
 
         // отрисовка карты
-
-        for (let chunkY = 0; chunkY < this._chunks.length; chunkY++) {
+        for (let chunkY = 0; chunkY < this._height; chunkY++) {
             for (let chunkX = 0; chunkX < this._chunks[chunkY].length; chunkX++) {
                 const chunk: Chunk = this._chunks[chunkY][chunkX];
 
@@ -56,11 +44,6 @@ export default class World {
 
                 }
             }
-
-            // this._tilemap.forEach((tile: Tile): void => {
-            //     tile.update(timestamp);
-            //     tile.draw();
-            // });
         }
     }
 
@@ -69,7 +52,7 @@ export default class World {
     }
 
     private getChunk(id: number): Chunk | null {
-        let foundChunkIndex: number = Math.ceil(id / this._height) - 1;
+        let foundChunkIndex: number = Math.ceil(id / this._width) - 1;
 
         if (foundChunkIndex < 0 || foundChunkIndex > this._width - 1 || !this._chunks[foundChunkIndex]) {
             console.warn('chunk by ID not found');
@@ -82,8 +65,8 @@ export default class World {
     private createChunkArray(): void {
         let chunk: Chunk[] = [];
 
-        for (let y = 0; y < this._width; y++) {
-            for (let x = 0; x < this._height; x++) {
+        for (let y = 0; y < this._height; y++) {
+            for (let x = 0; x < this._width; x++) {
                 chunk.push(new Chunk(x, y, this._library, this._canvas));
             }
 
@@ -93,31 +76,32 @@ export default class World {
     }
 
     private generateChunkTiles() {
-        for (let x = 0; x < this._width; x++) {
-            for (let y = 0; y < this._height; y++) {
-                this._chunks[x][y].createTilesArray();
+        for (let y = 0; y < this._height; y++) {
+            for (let x = 0; x < this._width; x++) {
+                this._chunks[y][x].createTilesArray();
             }
         }
     }
 
-    private fillChunks() {
-        for (let x = 1; x < this._width; x++) {
-            for (let y = 0; y < this._height; y++) {
-                this._chunks[x][y].fillTiles();
+    private fillChunks(): void {
+        for (let y = 1; y < this._height; y++) {
+            for (let x = 0; x < this._width; x++) {
+                this._chunks[y][x].fillTiles();
             }
         }
     }
 
     private surfaceGeneration(): void {
         let move = 0;
-        let width = 8;
+        let width = 3;
         let height = this._chunkSize - 1;
 
         // генерация поверхности только для первых чанков по горизонтали
         // от цикла можно избавиться
-        for (let x = 0; x < 1; x++) {
-            for (let y = 0; y < this._height; y++) {
-                const chunk: Chunk | null = this.getChunk(this._chunks[x][y].id);
+        for (let y = 0; y < 1; y++) {
+            for (let x = 0; x < this._width; x++) {
+                const chunk: Chunk | null = this.getChunk(this._chunks[y][x].id);
+
                 /* height - устанавливать значение после получение чанка (this.chunkSize) */
 
                 if (chunk === null) {
@@ -146,6 +130,7 @@ export default class World {
 
                     for (let tileY = height; tileY >= 0; tileY--) {
                         chunk.tiles[tileX][tileY].type = 1;
+                        chunk.tiles[tileX][tileY].collidable = true;
                     }
                 }
             }
@@ -154,11 +139,26 @@ export default class World {
         move++;
     }
 
-    public generateWorld(): void {
+    private async publishMapObjects(): Promise<void> {
+        for (let chunkY = 0; chunkY < this._height; chunkY++) {
+            for (let chunkX = 0; chunkX < this._chunks[chunkY].length; chunkX++) {
+                const chunk: Chunk = this._chunks[chunkY][chunkX];
+
+                for (let tileY = 0; tileY < chunk.tiles.length; tileY++) {
+                    for (let tileX = 0; tileX < chunk.tiles[tileY].length; tileX++) {
+                        await this._bus.publish('game:addGameEntity', chunk.tiles[tileY][tileX]);
+                    }
+                }
+            }
+        }
+    }
+
+    public async generateWorld(): Promise<void> {
         this.createChunkArray();
         this.generateChunkTiles();
         this.surfaceGeneration();
         this.fillChunks();
+        this.publishMapObjects();
 
         console.log(this._chunks)
     }
