@@ -1,7 +1,4 @@
 /* UI Button options */
-import {GameObject} from "@/types/game";
-import Tile from "@/objects/world/Tile";
-
 type ButtonOptions = {
     x: number;
     y: number;

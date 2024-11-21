@@ -1,7 +1,5 @@
 import Character from "@/objects/characters/Character";
-import Enemy from "@/objects/characters/Enemy";
-import {GameObject} from "@/types/game";
-import Tile from "@/objects/world/Tile";
+import GameObject from "@/objects/world/GameObject";
 
 export default class Collision {
     public static handle(entity: Character, collisionObj: GameObject, side: string | boolean): void {
@@ -12,13 +10,13 @@ export default class Collision {
                 entity.collisionX = side;
             }
 
-            if (entity.type === 'player' && collisionObj.type === 'tile') {
-                this.handlePlayerVsTileCollide(collisionObj);
-            }
-
-            if (entity.type === 'player' && collisionObj.type === 'enemy') {
-                this.handlePlayerVsEnemyCollide(collisionObj);
-            }
+            // if (entity.type === 'player' && collisionObj.type === 'tile') {
+            //     this.handlePlayerVsTileCollide(collisionObj);
+            // }
+            //
+            // if (entity.type === 'player' && collisionObj.type === 'enemy') {
+            //     this.handlePlayerVsEnemyCollide(collisionObj);
+            // }
 
             return;
         }

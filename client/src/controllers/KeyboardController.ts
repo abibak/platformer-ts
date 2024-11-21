@@ -9,11 +9,13 @@ export default class KeyboardController {
     public jump: boolean = false;
     public left: boolean = false;
     public right: boolean = false;
+    public top: boolean = false;
     public down: boolean = false;
     public count: number = 0;
 
     public onKeyDown(code: number): void {
         if (code === Keycodes.Jump) {
+            this.top = true;
             this.count++;
 
             if (this.count >= 2) {
@@ -39,6 +41,7 @@ export default class KeyboardController {
 
     public onKeyUp(code: number): void {
         if (code === Keycodes.Jump) {
+            this.top = false;
             this.jump = false;
             this.count = 0;
         }

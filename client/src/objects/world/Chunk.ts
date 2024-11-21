@@ -25,20 +25,19 @@ export default class Chunk {
     public createTilesArray(): void {
         let tileRaw: Tile[] = [];
 
-        //console.log(this._numberX)
-
-        let x = (this._numberY) * this._chunkSize * 64;
-        let y = (this._numberX + 1) * this._chunkSize * 64;
+        let startChunkX = (this._numberY) * this._chunkSize * 64;
+        let startChunkY = (this._numberX + 1) * this._chunkSize * 64;
 
         for (let tileX = 0; tileX < this._chunkSize; tileX++) {
             for (let tileY = 0; tileY < this._chunkSize; tileY++) {
+                let tX = (tileX * 64) + startChunkY;
+                let tY = startChunkX - (tileY * 64);
 
-                let tX = (tileX * 64) + x;
-                let tY = y - (tileY * 64);
+                const img: ImageManager = this._library.tiles()['tile_' + 10]; // temp
 
-                const img: ImageManager = this._library.tiles()['tile_' + 10];
+                const tile: Tile = new Tile(tX, tY, 64, 64, false, img.image, this._canvas);
 
-                tileRaw[tileY] = new Tile(tX, tY, 64, 64, true, img.image, this._canvas);
+                tileRaw[tileY] = tile;
             }
 
             this._tiles.push(tileRaw);

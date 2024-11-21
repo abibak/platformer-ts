@@ -1,6 +1,6 @@
 import AudioManager from "@/library/AudioManager";
 import Character from "@/objects/characters/Character";
-import GameObject from "@/objects/GameObject";
+import GameObject from "@/objects/world/GameObject";
 
 /* Event Bus */
 export type Callback = (arg?: any) => void;
