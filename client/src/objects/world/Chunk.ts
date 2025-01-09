@@ -6,12 +6,24 @@ import Canvas from "@/objects/Canvas";
 export default class Chunk {
     private readonly _id: number = 0;
     private static _staticId: number = 0;
+    public objects: Tile[] = [];
     private _tiles: Tile[][] = [];
     private _chunkSize: number = 10;
     private _numberX: number;
     private _numberY: number;
     private _library: Library;
     private _canvas: Canvas;
+    private _data: {
+        x: number;
+        y: number;
+        size: number
+    } = {
+        x: 0,
+        y: 0,
+        size: 0
+    }
+
+    public type: string = 'default';
 
     public constructor(numberX: number, numberY: number, library: Library, canvas: Canvas) {
         Chunk._staticId += 1;
@@ -25,8 +37,12 @@ export default class Chunk {
     public createTilesArray(): void {
         let tileRaw: Tile[] = [];
 
-        let startChunkX = (this._numberY) * this._chunkSize * 64;
-        let startChunkY = (this._numberX + 1) * this._chunkSize * 64;
+        let startChunkX = (this._numberY) * (this._chunkSize * 64); // initial Y
+        let startChunkY = (this._numberX + 1) * (this._chunkSize * 64); // initial X
+
+        this._data.x = startChunkY;
+        this._data.y = startChunkX;
+        this._data.size = this._chunkSize * 64;
 
         for (let tileX = 0; tileX < this._chunkSize; tileX++) {
             for (let tileY = 0; tileY < this._chunkSize; tileY++) {
@@ -35,7 +51,7 @@ export default class Chunk {
 
                 const img: ImageManager = this._library.tiles()['tile_' + 10]; // temp
 
-                const tile: Tile = new Tile(tX, tY, 64, 64, false, img.image, this._canvas);
+                const tile: Tile = new Tile(tX, tY, 64, 64, false, img.img, this._canvas);
 
                 tileRaw[tileY] = tile;
             }
@@ -49,6 +65,7 @@ export default class Chunk {
         for (let x = 0; x < this._tiles.length; x++) {
             for (let y = 0; y < this._tiles[x].length; y++) {
                 this._tiles[x][y].type = 1;
+                this._tiles[x][y].collidable = true;
             }
         }
     }

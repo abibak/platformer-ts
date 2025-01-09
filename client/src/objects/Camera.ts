@@ -1,12 +1,14 @@
-import Entity from "./entities/Entity";
 import Canvas from "./Canvas";
 import Character from "@/objects/characters/Character";
-
-// багулина: при движении камеры по время коллизии, не правильно отрисовывается мир
 
 export default class Camera {
     private _target: Character;
     private _canvas: Canvas;
+
+    public w: number = 640;
+    public h: number = 640;
+    public x: number = 0;
+    public y: number = 0;
 
     public constructor(target: Character, canvas: Canvas) {
         this._target = target;

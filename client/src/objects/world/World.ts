@@ -1,20 +1,30 @@
 import Canvas from "../Canvas";
 import EventBus from "../../EventBus";
-import Brain from "@/objects/Brain";
+import Brain from "@/objects/characters/Brain";
 import Library from "@/library/Library";
 import Tile from "@/objects/world/Tile";
 import Character from "@/objects/characters/Character";
 import Chunk from "@/objects/world/Chunk";
+import ChunkGenerator from "@/objects/world/ChunkGenerators/ChunkGenerator";
+import ForestGenerator from "@/objects/world/ChunkGenerators/ForestGenerator";
+import VillageGenerator from "@/objects/world/ChunkGenerators/VillageGenerator";
+
+enum ChunkTypes {
+    Forest = 'forest',
+    Village = 'village'
+}
 
 export default class World {
     private _width: number = 0; // number horizontal chunks
     private _height: number = 0; // number vertical chunks
     private _chunkSize: number = 10;
     private _chunks: Chunk[][] = [];
+    private _renderChunks: Chunk[] = [];
     private _library: Library;
     private _canvas: Canvas;
     private _bus: EventBus;
     private _brain: Brain;
+    private _chunkGenerators: { [key: string]: ChunkGenerator } = {};
 
     public constructor(width: number, height: number, library: Library, canvas: Canvas, bus: EventBus, player: Character) {
         this._width = width;
@@ -24,31 +34,20 @@ export default class World {
         this._bus = bus;
         this._brain = new Brain(this._canvas, [player]);
 
+        this._chunkGenerators['forestGenerator'] = new ForestGenerator(canvas, library);
+        this._chunkGenerators['villageGenerator'] = new VillageGenerator(canvas, library);
+
         this.generateWorld();
     }
 
     public async update(timestamp: number): Promise<void> {
         await this.renderBackground();
         await this._brain.update();
-
-        // отрисовка карты
-        for (let chunkY = 0; chunkY < this._height; chunkY++) {
-            for (let chunkX = 0; chunkX < this._chunks[chunkY].length; chunkX++) {
-                const chunk: Chunk = this._chunks[chunkY][chunkX];
-
-                for (let tileY = 0; tileY < chunk.tiles.length; tileY++) {
-                    for (let tileX = 0; tileX < chunk.tiles[tileY].length; tileX++) {
-                        const tile: Tile = chunk.tiles[tileY][tileX];
-                        await tile.draw();
-                    }
-
-                }
-            }
-        }
+        await this.drawChunks();
     }
 
     private async renderBackground(): Promise<void> {
-        this._canvas.drawBackground(this._library.images().background.image);
+        this._canvas.drawBackground(this._library.images().background.img);
     }
 
     private getChunk(id: number): Chunk | null {
@@ -67,18 +66,31 @@ export default class World {
 
         for (let y = 0; y < this._height; y++) {
             for (let x = 0; x < this._width; x++) {
-                chunk.push(new Chunk(x, y, this._library, this._canvas));
-            }
+                let newChunk: Chunk = new Chunk(x, y, this._library, this._canvas);
 
+                if (y === 0) {
+                    let chunkTypes: ChunkTypes[] = Object.values(ChunkTypes);
+                    let randomType: string = chunkTypes[this.random(chunkTypes.length - 1, 0)] + 'Generator';
+                    let generator: ChunkGenerator = this._chunkGenerators[randomType];
+
+                    generator.generate(newChunk);
+                }
+
+                chunk.push(newChunk);
+            }
             this._chunks.push(chunk);
             chunk = [];
         }
     }
 
+    // скрестить с функцией fillChunks
     private generateChunkTiles() {
         for (let y = 0; y < this._height; y++) {
             for (let x = 0; x < this._width; x++) {
                 this._chunks[y][x].createTilesArray();
+                // после создания массива тайлов, сразу же заполнить его, для избежания дублирования кода
+                // сделать заполнение сразу после y = 1
+                // this._chunks[y][x].fillTiles();
             }
         }
     }
@@ -139,6 +151,8 @@ export default class World {
         move++;
     }
 
+    // func name: pullingMapObjects?
+    // скрестить с функцией drawChunks, абсолютно одинаковые функции
     private async publishMapObjects(): Promise<void> {
         for (let chunkY = 0; chunkY < this._height; chunkY++) {
             for (let chunkX = 0; chunkX < this._chunks[chunkY].length; chunkX++) {
@@ -151,6 +165,30 @@ export default class World {
                 }
             }
         }
+    }
+
+    private async drawChunks(): Promise<void> {
+        // отрисовка чанков
+        for (let chunkY = 0; chunkY < this._height; chunkY++) {
+            for (let chunkX = 0; chunkX < this._chunks[chunkY].length; chunkX++) {
+                const chunk: Chunk = this._chunks[chunkY][chunkX];
+
+                for (let tileY = 0; tileY < chunk.tiles.length; tileY++) {
+                    for (let tileX = 0; tileX < chunk.tiles[tileY].length; tileX++) {
+                        const tile: Tile = chunk.tiles[tileY][tileX];
+                        await tile.draw();
+                    }
+                }
+
+                if (chunkY === 0) {
+                    this.drawObjectsChunk(chunk.objects);
+                }
+            }
+        }
+    }
+
+    private drawObjectsChunk(chunkObjects): void {
+        //chunkObjects[0]?.draw();
     }
 
     public async generateWorld(): Promise<void> {
@@ -166,78 +204,4 @@ export default class World {
     private random(max: number, min: number): number {
         return Math.floor(Math.random() * (max - min + 1) + min);
     }
-
-    /*private async generateWorld(): Promise<void> {
-        await Promise.all([
-            this.processMap().then((): void => {
-                this.processEnemies();
-            }),
-        ]);
-    }
-
-    private async processEnemies(): Promise<void> {
-        const level = map['level' + this.currentLevel]; // fix
-        const characters: Character[] = level.objects;
-
-        for (const obj of characters) {
-            const config = enemies[obj.name]; // *дублирование конфигов
-            const enemy: Enemy = new Enemy(this._library,
-                this._bus,
-                this._canvas,
-                {
-                    ...config,
-                    x: obj.x,
-                    y: obj.y
-                }
-            );
-
-            enemy.name = obj.name;
-            enemy.movementPoints.startX = obj.x;
-            enemy.movementPoints.startY = obj.y;
-            enemy.movementPoints.length = 150; // movement (right | left) in px
-
-            await this._bus.publish('game:addGameEntity', enemy);
-            this._brain.bindEnemy(enemy);
-        }
-    }
-
-    private async processMap(): Promise<void> {
-        const level = map['level' + this.currentLevel]; // fix
-        const mapLevelsData: [] = level.data;
-
-        const tileWidth: number = 64;
-        const tileHeight: number = 64;
-        let tileOffsetX: number = 0;
-        let tileOffsetY: number = 0;
-
-        for (const level of mapLevelsData) {
-            for (const tileNumber of level) {
-                if (tileNumber === 0) {
-                    tileOffsetX += 64;
-                    continue;
-                }
-
-                const img: ImageManager = this._library.tiles()['tile_' + tileNumber];
-
-                const tileObject: GameObject = new Tile(
-                    tileOffsetX,
-                    tileOffsetY,
-                    tileWidth,
-                    tileHeight,
-                    true,
-                    1,
-                    img.image,
-                    this._canvas
-                );
-
-                this._tilemap.push(tileObject);
-                await this._bus.publish('game:addGameEntity', tileObject);
-
-                tileOffsetX += 64;
-            }
-
-            tileOffsetX = 0; // начало по x
-            tileOffsetY += 64; // начало по y
-        }
-    }*/
 }

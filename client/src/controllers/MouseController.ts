@@ -1,11 +1,19 @@
+import EventBus from "@/EventBus";
+
 export default class MouseController {
+    private _bus: EventBus;
     public click: boolean = false;
 
-    public handleMouseEventDown(event) {
-        this.click = true;
+    public constructor() {
+        this._bus = EventBus.getInstance();
     }
 
-    public handleMouseEventUp(event) {
+    public handleMouseEventDown(e) {
+        this.click = true;
+        this._bus.publish('player:attack');
+    }
+
+    public handleMouseEventUp(e) {
         this.click = false;
     }
 

@@ -8,6 +8,7 @@ type ButtonOptions = {
 }
 
 export default class Canvas {
+    private static _instance: Canvas;
     private _canvas: HTMLCanvasElement;
     private _ctx: CanvasRenderingContext2D;
 
@@ -16,7 +17,7 @@ export default class Canvas {
     public xOffset: number = 0;
     public yOffset: number = 0;
 
-    public constructor() {
+    private constructor() {
         this._canvas = <HTMLCanvasElement>document.getElementById('game');
 
         this.width = 2000;
@@ -28,6 +29,14 @@ export default class Canvas {
 
             this._ctx = this._canvas.getContext('2d');
         }
+    }
+
+    public static getInstance(): Canvas {
+        if (!this._instance) {
+            this._instance = new Canvas();
+        }
+
+        return this._instance;
     }
 
     public context(): CanvasRenderingContext2D {
@@ -53,27 +62,15 @@ export default class Canvas {
         this._ctx.drawImage(options.img, options.x - this.xOffset, options.y - this.yOffset);
     }
 
-    public drawCustomButton(props) {
-        this._ctx.fillStyle = props.color;
-        this._ctx.fillRect(props.x, props.y, props.w, props.h);
-
-        //this._ctx.fillStyle = '#fff';
-        this._ctx.font = '32px Main Font';
-
-        const size: TextMetrics = this._ctx.measureText(props.text)
-
-        const textX = props.x + (props.w - size.width) / 2;
-        console.log(textX);
-
-        this._ctx.fillText(props.label, textX, props.y)
-    }
-
     public async drawBackground(img: HTMLImageElement) {
         // смещение по x and y камеры, для фиксирования фона
         this._ctx.drawImage(img, 0 - this.xOffset, 0 - this.yOffset, this.width, this.height);
     }
 
     public drawTile(tile): void {
+        /*this._ctx.strokeStyle = 'red';
+        this._ctx.lineWidth = .2;
+        this._ctx.strokeRect(tile.x, tile.y, tile.w, tile.h);*/
         this._ctx.drawImage(tile.img, tile.x, tile.y, tile.w, tile.h);
     }
 
@@ -87,7 +84,7 @@ export default class Canvas {
 
         this._ctx.scale(params.scaleX, params.scaleY);
         this._ctx.drawImage(
-            params.image,
+            params.img,
             params.scale - params.scaleOffsetX,
             0,
             params.w + params.xOffset,
@@ -102,6 +99,10 @@ export default class Canvas {
         this._ctx.lineWidth = .2;
         this._ctx.strokeRect(params.x - params.xOffset, params.y - params.yOffset, params.w + params.xOffset, params.h);
         this._ctx.restore();
+    }
+
+    public drawButton(img: HTMLImageElement, x: number, y: number, w: number, h: number) {
+        this._ctx.drawImage(img, x, y, w, h);
     }
 
     public drawHealthPlayer(hp: number, maxHp: number): void {

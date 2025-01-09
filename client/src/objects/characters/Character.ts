@@ -4,12 +4,13 @@ import Animator from "../animators/Animator";
 import Canvas from "../Canvas";
 import EventBus from "@/EventBus";
 import Library from "@/library/Library";
-import {Sprite, SpriteList} from "@/types/main";
+import {SpriteActionList} from "@/types/main";
 import configSpritePlayer from "@/assets/data-sprites/player.json";
 import configSpriteEnemies from "@/assets/data-sprites/enemies.json";
 import GameObject from "@/objects/world/GameObject";
 
 export default class Character extends Entity implements ICharacter {
+    public mode: 'debug' | 'default' = 'default';
     public isIdle: boolean = false;
     public isWalk: boolean = false;
     public isMovingLeft: boolean = false;
@@ -19,17 +20,13 @@ export default class Character extends Entity implements ICharacter {
     public onGround: boolean = false;
     public isDead: boolean = false;
     public isFacingLeft: boolean = false;
-    public stats: {
-        coins: number;
-    }
-    public speed: number;
+    public speed: number = 0;
     public speedMultiplier: number = 1;
     public isJump: boolean = false;
     public jumpQuantity: number = 0;
     public maxJumpQuantity: number = 2;
     public jumpHeight: number = 10;
     public maxJumpHeight: number = 10;
-    public collidable: boolean = true;
 
     // для класса Brain
     public movementPoints: {
@@ -51,22 +48,32 @@ export default class Character extends Entity implements ICharacter {
     protected animator: Animator;
     protected action: string = '';
 
-    private static currentId: number = 0;
-
     protected readonly _bus: EventBus;
     protected readonly _library: Library;
     protected readonly _canvas: Canvas;
 
-    public constructor(canvas: Canvas, bus: EventBus, library: Library, type: string) {
-        super();
-        this._canvas = canvas;
-        this._bus = bus;
-        this._library = library;
+    private static currentId: number = 0;
+    private _config: SpriteActionList | null;
+
+    public constructor(
+        id: number,
+        x: number,
+        y: number,
+        w: number,
+        h: number,
+        collidable: boolean,
+        type: string
+    ) {
+        super(id, x, y, w, h, collidable);
+        this._canvas = Canvas.getInstance();
+        this._bus = EventBus.getInstance();
+        this._library = Library.getInstance();
         this.type = type;
         this.id = Character.generateId();
 
         this._bus.subscribe('animator:animationFinish', this.animationFinish.bind(this));
 
+        this._config = this.getConfig();
         this.setInstanceAnimation();
     }
 
@@ -92,36 +99,34 @@ export default class Character extends Entity implements ICharacter {
     }
 
     public async update(timestamp: number, dt: number): Promise<void> {
-        //this.adjustVerticalMovement(dt);
-        //this.adjustHorizontalMovement(dt);
-
-        let frameList: SpriteList;
-        let frameEvents;
-
-        const getPath = await this.updateAnimation(); // обработка состояние персонажа
-
-        if (this.type === 'player') {
-            frameList = configSpritePlayer;
-            frameEvents = frameList.frameEvents;
-        } else if (this.type === 'enemy') {
-            frameList = configSpriteEnemies[this.name];
-            frameEvents = frameList.frameEvents;
+        if (this.mode === 'default') {
+            this.adjustVerticalMovement(dt);
+            this.adjustHorizontalMovement(dt);
         }
 
-        const spriteMap: Sprite = frameList.frames[getPath.status];
+        this.onGround = false;
 
-        await this.animator.setPath(getPath, this.reflectSprite(spriteMap));
+        await this.updateAnimation(); // обработка состояние персонажа
+
+        const getActionImage = this._library.sprites()[this.name][this.action];
+        const actionData = this._config.frames[this.action];
+
+        actionData.img = getActionImage.img;
+
+        this.animator.setAnimation(this.action, this.reflectSprite(actionData));
         await this.animator.update(timestamp);
     }
 
-    protected async getSpriteDataByAnimationName(action: string): Promise<Sprite> {
+    protected getConfig(): SpriteActionList | null {
         if (this.type === 'player') {
-            return configSpritePlayer.frames[action];
+            return configSpritePlayer;
         }
 
         if (this.type === 'enemy') {
-            return configSpriteEnemies[this.name].frames[action];
+            return configSpriteEnemies[this.name];
         }
+
+        return null;
     }
 
     public reflectSprite(data: any): any {
@@ -179,13 +184,6 @@ export default class Character extends Entity implements ICharacter {
         if (this.isAttack && !this.isDead && !this.isHurt) {
             this.action = 'attack';
         }
-
-        let url = this._library.sprites()[this.name][this.action].url;
-
-        return {
-            url: url,
-            status: this.action,
-        }
     }
 
     public setInstanceAnimation(): void {
@@ -215,7 +213,7 @@ export default class Character extends Entity implements ICharacter {
     }
 
     protected adjustVerticalMovement(dt: number): void {
-        //this.fall(dt);
+        this.fall(dt);
     }
 
     protected adjustHorizontalMovement(dt: number): void {
@@ -246,7 +244,7 @@ export default class Character extends Entity implements ICharacter {
     }
 
     public async attack(entities: GameObject[]): Promise<void> {
-        const {w: w, h: h} = await this.getSpriteDataByAnimationName('attack');
+        const {w: w, h: h} = await this.getConfig();
 
         let startX: number;
         let endX: number;

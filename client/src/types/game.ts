@@ -9,9 +9,6 @@ export interface ICharacter extends IEntity {
     isMovingRight: boolean;
     health: number;
     maxHealth: number;
-    stats: {
-        coins: number;
-    }
     isJump: boolean;
     isDead: boolean;
     isFall: boolean;
@@ -32,7 +29,7 @@ export interface IEnemy extends ICharacter {
 }
 
 export interface AnimationRenderParams {
-    image: HTMLImageElement;
+    img: HTMLImageElement;
     scale: number;
     w: number;
     h: number;

@@ -8,12 +8,11 @@ export default class Enemy extends Character implements IEnemy {
     public speed: number = 1.05;
 
     public constructor(
-        library: Library,
         bus: EventBus,
         canvas: Canvas,
         config: any,
     ) {
-        super(canvas, bus, library, 'enemy');
+        super('enemy');
         this.type = 'enemy';
 
         this.x = config.x;

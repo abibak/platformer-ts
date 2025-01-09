@@ -24,7 +24,12 @@ export default (env: IEnvVariables) => {
             rules: [
                 {
                     test: /\.s[ac]ss$/i,
-                    use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
+                    use: [MiniCssExtractPlugin.loader, 'css-loader', {
+                        loader: 'sass-loader',
+                        options: {
+                            'api': 'modern-compiler'
+                        }
+                    }],
                 },
                 {
                     test: /\.ts$/,

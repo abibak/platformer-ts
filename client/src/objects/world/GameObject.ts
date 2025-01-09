@@ -56,11 +56,11 @@ export default abstract class GameObject {
     }
 
     public centerX(): number {
-        return this._x + this._width;
+        return this._x + (this._width / 2);
     }
 
     public centerY(): number {
-        return this._y + this._height;
+        return this._y + (this._height / 2);
     }
 
     public top(): number {
