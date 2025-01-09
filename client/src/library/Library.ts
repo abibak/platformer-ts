@@ -1,8 +1,5 @@
 // Library - класс для загрузки всех ресурсов игры
 
-// loadSounds и loadTiles должны добавлять элементы в общий массив промисов, что не формировать каждый массив
-// дублирование кода - должен быть основной загрузчик (load) для ImageManager и AudioManager
-
 // progress load - формируется на основе положительного результат выполнения промиса
 // если промис отклонен, дальнейшая загрузка прерывается
 // если totalLoaded равен needLoaded, считается, что загрузка заверешена на 100% (банально но, работает)
@@ -15,12 +12,15 @@ import tilemap from "@/maps/map.json";
 import Canvas from "@/objects/Canvas";
 import EventBus from "@/EventBus";
 
+type Loaders = AudioManager | ImageManager;
 type TileImage = { [key: string]: ImageManager }
-type AllowPromises = AudioManager | ImageManager;
 
-export default class Library implements Library {
+export default class Library {
+    private static library: Library;
+
     private _canvas: Canvas;
     private _bus: EventBus;
+
     private _totalLoaded: number = 0;
     private _needLoad: number = 0;
     private _loadError: boolean = false;
@@ -28,111 +28,136 @@ export default class Library implements Library {
     private _sounds: SoundEntity;
     private _tiles: TileImage = {};
     private _images: TileImage = {};
-    private _sprites;
+    private _sprites = {};
+    private _uiComponents = {};
 
-    public constructor(canvas: Canvas, bus: EventBus) {
-        this._canvas = canvas;
-        this._bus = bus;
-        this._images = {
-            background: new ImageManager('images/backgrounds/background3.jpg'),
+    private _loaders: (ImageManager | AudioManager)[] = [];
+
+    private constructor() {
+        this._canvas = Canvas.getInstance();
+        this._bus = EventBus.getInstance();
+
+        this.prepare();
+    }
+
+    public static getInstance(): Library {
+        if (!this.library) {
+            this.library = new Library();
         }
+
+        return this.library;
+    }
+
+    public async prepare(): Promise<void> {
+        await Promise.all([
+            this.prepareImages(),
+            this.prepareSounds(),
+            this.prepareTiles(),
+            this.prepareUIComponents(),
+            this.prepareSprites(),
+            this.test()
+        ]);
+
+        this.loadAllResources();
+    }
+
+    public async test() {
+        for (let i = 0; i < 1; i++) {
+            this.addLoader(new AudioManager('world/light_ambience1.wav'))
+        }
+    }
+
+    private async loadAllResources(): Promise<void> {
+        const loadPromises: Promise<void>[] = this._loaders.map(loader => loader.load());
+        const results: PromiseSettledResult<any>[] = await Promise.allSettled(loadPromises);
+
+        this._needLoad = loadPromises.length;
+        this._totalLoaded = (results.filter((result, index) => {
+            if (result.status === 'fulfilled') {
+                this.progress(index + 1);
+                return true;
+            }
+
+            return false;
+        })).length
+
+        this._loadError = results.some(result => result.status === 'rejected');
+
+        if (this._totalLoaded === this._needLoad && !this._loadError) {
+            this._bus.publish('library:loaded');
+        }
+    }
+
+    private async prepareUIComponents(): Promise<void> {
+        this._uiComponents = {
+            playButton: this.addLoader(new ImageManager('images/ui/start-menu/buttons/play/72px/play01.png')),
+        }
+    }
+
+    private async prepareImages(): Promise<void> {
+        this._images = {
+            background: this.addLoader(new ImageManager('images/backgrounds/background3.jpg')),
+            startMenu: this.addLoader(new ImageManager('images/backgrounds/start-menu-background.png')),
+            grass1: this.addLoader(new ImageManager('images/sprites/w-elements/grass.png'))
+        }
+    }
+
+    private async prepareSprites(): Promise<void> {
         this._sprites = {
             player: {
-                idle: new ImageManager('images/sprites/player/idle.png'),
-                attack: new ImageManager('images/sprites/player/attack.png'),
-                fall: new ImageManager('images/sprites/player/fall.png'),
-                jump: new ImageManager('images/sprites/player/jump.png'),
-                run: new ImageManager('images/sprites/player/run.png'),
-                hurt: new ImageManager('images/sprites/player/hurt.png'),
-                death: new ImageManager('images/sprites/player/death.png')
+                idle: this.addLoader(new ImageManager('images/sprites/player/idle.png')),
+                attack: this.addLoader(new ImageManager('images/sprites/player/attack.png')),
+                fall: this.addLoader(new ImageManager('images/sprites/player/fall.png')),
+                jump: this.addLoader(new ImageManager('images/sprites/player/jump.png')),
+                run: this.addLoader(new ImageManager('images/sprites/player/run.png')),
+                hurt: this.addLoader(new ImageManager('images/sprites/player/hurt.png')),
+                death: this.addLoader(new ImageManager('images/sprites/player/death.png'))
             },
-            'fire-warm': {
-                idle: new ImageManager('images/sprites/enemies/fire-warm/idle.png'),
-                attack: new ImageManager('images/sprites/enemies/fire-warm/attack.png'),
-                death: new ImageManager('images/sprites/enemies/fire-warm/death.png'),
-                walk: new ImageManager('images/sprites/enemies/fire-warm/walk.png'),
-                hurt: new ImageManager('images/sprites/enemies/fire-warm/hurt.png')
+            fireWarm: {
+                idle: this.addLoader(new ImageManager('images/sprites/enemies/fire-warm/idle.png')),
+                attack: this.addLoader(new ImageManager('images/sprites/enemies/fire-warm/attack.png')),
+                death: this.addLoader(new ImageManager('images/sprites/enemies/fire-warm/death.png')),
+                walk: this.addLoader(new ImageManager('images/sprites/enemies/fire-warm/walk.png')),
+                hurt: this.addLoader(new ImageManager('images/sprites/enemies/fire-warm/hurt.png'))
             },
         }
-
-        /*
-        * дождаться успешного выполнения loadSounds и loadTiles
-        * после вызвать init для подготовки промисов
-        * в случае положительного результат, вызвать метод в App
-        * */
-        Promise.all([this.loadSounds(), this.loadTiles()]).then(() => {
-            this.init().then(() => this._bus.publish('library:loaded'));
-        });
     }
 
-    public async init(): Promise<void> {
-        // общий массив промисов
-        const promises: AllowPromises[] = [];
-
-        // вынести в метод загрузки спрайтов
-        for (const key of Object.keys(this._sprites)) {
-            for (const obj of Object.values(this._sprites[key])) {
-                promises.push(obj)
-            }
+    private async prepareSounds(): Promise<void> {
+        this._sounds = {
+            swordAttack: this.addLoader(new AudioManager('player/attack_sword1.mp3', 0.3)),
+            swordMiss: this.addLoader(new AudioManager('player/sword_miss1.wav', 0.3)),
+            jump: this.addLoader(new AudioManager('player/jump1.wav', 0.4)),
+            run: this.addLoader(new AudioManager('player/run1.wav')),
+            hit: this.addLoader(new AudioManager('player/attack_sword1.mp3')),
+            lightAmbient1: this.addLoader(new AudioManager('world/light_ambience1.wav')),
+            lightAmbient2: this.addLoader(new AudioManager('world/light_ambience2.wav')),
         }
-
-        return new Promise(async (resolve, reject): Promise<void> => {
-            // распределение промисов, для использования метода load
-            promises.push(
-                ...Object.values(this._tiles),
-                ...Object.values(this._sounds),
-                this._images.background,
-            );
-
-            this._needLoad = promises.length;
-
-            for (const promise of promises) {
-                if (this._loadError) {
-                    break;
-                }
-
-                await promise.load().then((): void => {
-                    this._totalLoaded++;
-                    this.progress();
-                }).catch(() => {
-                    this._loadError = true;
-                    reject();
-                });
-            }
-
-            return this._totalLoaded === this._needLoad ? resolve() : reject();
-        });
-    }
-
-    private progress(): void {
-        const progress: number = Math.round(this._totalLoaded / this._needLoad * 100);
-        this._canvas.drawProgressLoad(progress);
     }
 
     /*
     * Тайлы импортируются динамически, используя номера тайла указанные в map.json
     * */
-    private async loadTiles(): Promise<void> {
+    private async prepareTiles(): Promise<void> {
         const keys: string[] = Object.keys(tilemap.level1.tiles);
 
-        keys.forEach((key: string): void => {
+        for (const key of keys) {
             if (key !== '0') {
-                this._tiles['tile_' + key] = new ImageManager('tiles/Tile_' + key + '.png');
+                this._tiles['tile_' + key] = this.addLoader(new ImageManager('tiles/Tile_' + key + '.png'));
             }
-        });
-    }
-
-    private async loadSounds(): Promise<void> {
-        this._sounds = {
-            swordAttack: new AudioManager('player/attack_sword1.mp3', 0.3),
-            swordMiss: new AudioManager('player/sword_miss1.wav', 0.3),
-            jump: new AudioManager('player/jump1.wav', 0.4),
-            run: new AudioManager('player/run1.wav'),
-            hit: new AudioManager('player/attack_sword1.mp3'),
-            lightAmbient1: new AudioManager('world/light_ambience1.wav'),
-            lightAmbient2: new AudioManager('world/light_ambience2.wav'),
         }
     }
+
+    private addLoader<L extends Loaders>(loader: L): L {
+        this._loaders.push(loader);
+        return loader;
+    }
+
+    private progress(index): void {
+        const progress: number = Math.round(index / this._needLoad * 100);
+        this._canvas.drawProgressLoad(progress);
+    }
+
 
     public sounds(): SoundEntity {
         return this._sounds;
@@ -148,5 +173,9 @@ export default class Library implements Library {
 
     public sprites() {
         return this._sprites;
+    }
+
+    public uiComponents() {
+        return this._uiComponents;
     }
 }

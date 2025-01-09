@@ -1,30 +1,28 @@
 export default class ImageManager {
     private _url: string = '';
     private _path: string = '';
-    private _image: HTMLImageElement;
+    private _img: HTMLImageElement = new Image;
 
     public constructor(path: string) {
         this._path = path;
-        this._image = new Image;
     }
 
     public async load(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            import(/* webpackMode: "eager" */ '@/assets/' + this._path).then(url => {
-                this._url = url.default;
-                this._image.src = url.default;
-                resolve();
-            }).catch(() => {
-                reject('Image not found');
-            });
-        });
+        try {
+            const {default: url} = await import('@/assets/' + this._path);
+            this._url = url;
+            this.img.src = url;
+        } catch (e) {
+            const imgName = this._path.split('/').pop();
+            throw new Error(`Failed to load Image: "${imgName}"`);
+        }
     }
 
     public get url(): string {
         return this._url;
     }
 
-    public get image(): HTMLImageElement {
-        return this._image;
+    public get img(): HTMLImageElement {
+        return this._img;
     }
 }

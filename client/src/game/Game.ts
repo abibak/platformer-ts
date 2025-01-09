@@ -5,95 +5,113 @@ import Canvas from "../objects/Canvas";
 import KeyboardController from "../controllers/KeyboardController";
 import MouseController from "../controllers/MouseController";
 import Camera from "../objects/Camera";
-import Collider from "@/objects/Collider";
-import UI from "@/ui/UI";
-import Library from "@/library/Library";
+import Collision from "@/objects/Collision";
 import CollisionHandler from "@/handlers/CollisionHandler";
 import Character from "@/objects/characters/Character";
 import playerConfig from "@/assets/data/player.json";
-import {filterAliveEntities} from "@/utils/utils";
 import GameObject from "@/objects/world/GameObject";
+import {filterAliveEntities} from "@/utils/utils";
+import GameObjectsStore from "@/state/GameObjectsStore";
+import Library from "@/library/Library";
+import App from "@/App";
+import GameScreen from "@/objects/screens/GameScreen";
 
 export default class Game {
+    private readonly _app: App;
     private readonly _canvas: Canvas;
     private readonly _bus: EventBus;
     private readonly _library: Library;
-    private _ui: UI;
+    private _gameObjectsStore: GameObjectsStore;
     private _player: Player;
     private _world: World;
     private _camera: Camera;
-    private _collider: Collider;
+    private _collision: Collision;
     private _controller: KeyboardController;
     private _mouseController: MouseController;
     private _gameObjects: GameObject[] = [];
-    private _gameState: string = '';
+    private _gameState: string = 'pause';
 
     private _frame;
     private _lastTime: number = 0;
     private tickRate: number = 1000 / 60;
 
     public constructor(
-        library: Library,
+        app: App,
         bus: EventBus,
-        ui: UI,
-        canvas: Canvas,
         controller: KeyboardController,
         mouseController: MouseController
     ) {
-        this._library = library;
-        this._ui = ui;
+        this._app = app;
+        this._library = Library.getInstance();
+        this._gameObjectsStore = new GameObjectsStore;
         this._bus = bus;
-        this._canvas = canvas;
-        this._collider = new Collider;
+        this._canvas = Canvas.getInstance();
+        this._collision = new Collision;
         this._controller = controller;
         this._mouseController = mouseController;
 
-        this.createPlayer().then((player: Player): void => {
-            this._player = player;
-            this.subscribeEvents();
-            requestAnimationFrame(this.update.bind(this));
-        });
+        //this.init();
 
-        // this._library.sounds().lightAmbient2.play();
+        this.subscribeEvents();
+
+        requestAnimationFrame(this.update.bind(this));
+
+        //this._library.sounds().lightAmbient2.play();
     }
 
     private subscribeEvents(): void {
-        // добавить произвольную функцию (init), обернуть каждую операцию в promise
-        this._camera = new Camera(this._player, this._canvas);
-        this._world = new World(3,3, this._library, this._canvas, this._bus, this._player);
-        this._bus.subscribe('player:attack', (): void => {
-            this._player.attack(this._gameObjects);
-        });
+        this._bus.subscribe('game:init', this.init.bind(this));
         this._bus.subscribe('toggleClickState', this._mouseController.toggleStateClick.bind(this._mouseController));
-        this._bus.subscribe('game:filterEntities', () => this._gameObjects = filterAliveEntities(this._gameObjects))
+        this._bus.subscribe('game:filterEntities', () => this._gameObjects = filterAliveEntities(this._gameObjects));
+        // стоит вынести addGameEntity непосредственно в GameObject, чтобы при создании экземпляра вызывать метод в Game
         this._bus.subscribe('game:addGameEntity', (obj: GameObject) => this.addGameEntity(obj));
     }
 
-    private createPlayer(): Promise<Player> {
-        return new Promise((resolve): void => {
-            const player: Player = new Player(
-                this._library, this._bus, this._canvas, playerConfig, this._gameObjects
-            );
-            player.mode = 'debug';
+    private async init(): Promise<void> {
+        try {
+            this._gameState = '';
+            await this.createPlayer();
+            this._camera = new Camera(this._player, this._canvas);
+            this._world = new World(5, 3, this._library, this._canvas, this._bus, this._player);
+            this._app.setScreen(new GameScreen);
+        } catch (error) {
+            console.log('Ошибка инициализации.', error);
+        }
+    }
 
-            this._gameObjects.push(player);
-            resolve(player)
-        });
+    private async createPlayer(): Promise<void> {
+        try {
+            const player: Player = new Player(playerConfig, this._gameObjects);
+            this._player = this._gameObjectsStore.add(player);
+            this._player.mode = 'default';
+            this._gameObjects.push(this._player);
+        } catch (e) {
+            throw e;
+        }
     }
 
     private addGameEntity(obj: GameObject): void {
         this._gameObjects.push(obj);
     }
 
+    // изменить локигу фильтрации коллизий
+    // проверять коллизию только в текущем чанке
     private handleCollision(): void {
-        let collisionObjects: GameObject[] = [];
+        let filterArrGameObjects: GameObject[] = [];
 
+        // возможно добавить свойство filterGameObjects и изменять в случае вызова игрового события изменения состояния мира
+        // то есть при любом изменении вызвать filterGameObjects и обновить данные в массиве
+        // но, GameObject объекты могут изменять свое положение в процессе игры и это будет поводом для вызова "события",
+        // поэтому вероятность вызова 99.9%
+        // в таком случае нужно составить массив с измененными объектами, которые вызвали событие и работать непосредственно с ними
+        // на данный момент массив постоянно пересобирается заново, даже если состояния не изменяются, либо же кешировать
+        // засталяет задуматься, но все ради оптимизации, я так думаю :-)
         this._gameObjects.forEach((entity: GameObject): void => {
             if (entity instanceof Character) {
                 const {x: entityX, y: entityY, id: entityId, type: entityType} = entity;
 
                 // фильтрация массива в диапазоне 128px по x, y
-                collisionObjects = this._gameObjects.filter((obj: GameObject) => {
+                filterArrGameObjects = this._gameObjects.filter((obj: GameObject) => {
                     const {x: objX, y: objY, id: objId} = obj;
                     let objType: string = '';
 
@@ -110,26 +128,19 @@ export default class Game {
                         return true;
                     }
                 });
-                
-                // обработка коллизии
-                collisionObjects.forEach((obj: GameObject): void => {
-                    this._canvas.drawNearbyTiles(obj);
 
+                // обработка коллизии
+                filterArrGameObjects.forEach((obj: GameObject): void => {
                     if (!obj.collidable) {
                         return;
                     }
 
-                    // определить сторону коллизии или же false
-                    let sideCol = this._collider.checkColliding(entity, obj);
+                    this._canvas.drawNearbyTiles(obj);
 
-                    if (typeof sideCol !== "boolean") {
-                        if (sideCol.side) {
-                            CollisionHandler.handle(entity, obj, sideCol.side);
-                        }
-                    }
+                    const collisionInfo = this._collision.detectCollision(this._player, obj);
 
-                    if (typeof sideCol === "boolean") {
-                        CollisionHandler.handle(entity, null, sideCol);
+                    if (collisionInfo) {
+                        this._collision.resolveCollision(this._player, obj, collisionInfo);
                     }
                 });
             }
@@ -142,33 +153,30 @@ export default class Game {
         }
 
         const dt: number = (timestamp - this._lastTime) / 1000;
-        
+
         this._lastTime = timestamp;
 
         this._canvas.clearCanvas();
 
-        await this._camera.update();
-        await this.render(timestamp);
+        if (this._gameState !== 'pause') {
+            await this._camera.update();
+            await this.render(timestamp);
 
-        for (const obj of this._gameObjects) {
-            if (obj instanceof Character) {
-                await obj.update(timestamp, dt);
-                obj.onGround = false;
+            for (const obj of this._gameObjects) {
+                if (obj instanceof Character) {
+                    await obj.update(timestamp, dt);
+                }
+            }
+
+            await this.handleCollision();
+            await this.handleCharacterMovement();
+
+            if (this._library.sounds().lightAmbient2.ended) {
+                this._library.sounds().lightAmbient2.replay();
             }
         }
 
-        // this._gameObjects.forEach((entity: GameObject): void => {
-        //
-        // });
-
-        await this.handleCollision();
-        await this.handleCharacterActionMouse();
-        await this.handleCharacterMovement();
-
-
-        if (this._library.sounds().lightAmbient2.ended) {
-            this._library.sounds().lightAmbient2.replay();
-        }
+        await this._app.update();
 
         this._frame = window.requestAnimationFrame(this.update.bind(this));
     }
@@ -176,10 +184,6 @@ export default class Game {
     private async render(timestamp: number): Promise<void> {
         await this._world.update(timestamp);
         await this._canvas.drawHealthPlayer(this._player.health, this._player.maxHealth);
-    }
-
-    public handleCharacterActionMouse(): void {
-
     }
 
     public defaultPlayerMovement(): void {

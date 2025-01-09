@@ -3,5 +3,5 @@ import './assets/styles/variables.scss';
 import App from "./App";
 
 document.addEventListener('DOMContentLoaded', () => {
-   const app: App = new App();
+    const app: App = new App();
 });

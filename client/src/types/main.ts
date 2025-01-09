@@ -44,20 +44,19 @@ export interface StructureMap {
     }
 }
 
-export interface Sprite {
+export interface DataSprite {
     w: number;
     h: number;
     xOffset: number;
     yOffset: number;
     scaleOffsetX: number;
     step: number;
-    frameCount: number;
-    attackFrame: number;
+    image?: HTMLImageElement;
 }
 
-export interface SpriteList {
+export interface SpriteActionList {
     frames: {
-        [key: string]: Sprite;
+        [key in 'idle' | 'attack' | 'death' | 'hurt' | 'run' | 'jump' | 'fall']: DataSprite;
     }
 }
 

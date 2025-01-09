@@ -2,8 +2,21 @@ import {Subscriber} from "@/types/main";
 import {Callback} from "@/types/main";
 
 export default class EventBus {
+    private static _instance: EventBus;
     private _id: number = 0;
     private _subscribes: Subscriber = {};
+
+    private constructor() {
+        //
+    }
+
+    public static getInstance(): EventBus {
+        if (!this._instance) {
+           this._instance = new EventBus;
+        }
+
+        return this._instance;
+    }
 
     public subscribe(eventType: string, callback: Callback): void {
         if (!this._subscribes[eventType]) {
@@ -18,7 +31,7 @@ export default class EventBus {
             return;
         }
 
-        await Object.keys(this._subscribes[eventType]).forEach(id => {
+        Object.keys(this._subscribes[eventType]).forEach(id => {
             return this._subscribes[eventType][id](data);
         });
     }

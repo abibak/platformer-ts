@@ -12,16 +12,14 @@ export default class AudioManager {
     }
 
     public async load(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            import(/* webpackMode: "eager" */ '@/assets/' + this._dir + this._path).then(url => {
-                this.context.src = url.default;
-                this.events();
-                resolve();
-            }).catch(() => {
-                reject('Audio not found')
-            });
-        })
+        try {
+            const {default: url} = await import('@/assets/' + this._dir + this._path);
 
+            this.context.src = url;
+            this.events();
+        } catch (e) {
+            throw new Error(`Failed to load Audio: ${e}`);
+        }
     }
 
     private events(): void {

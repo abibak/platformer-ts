@@ -1,30 +1,18 @@
 import Character from "./Character";
-import EventBus from "../../EventBus";
 import {IPlayer, PlayerConfig} from "@/types/game";
-import Canvas from "../Canvas";
-import Library from "@/library/Library";
 import GameObject from "@/objects/world/GameObject";
 
 export default class Player extends Character implements IPlayer {
     private _restoreHealth: number;
     private _lastTime: number = 0;
-    public mode: 'debug' | 'default' = 'default';
 
     public constructor
     (
-        library: Library,
-        bus: EventBus,
-        canvas: Canvas,
         config: PlayerConfig,
         entities: GameObject[]
     ) {
-        super(canvas, bus, library, 'player');
-
-        this.id = config.id;
-        this.x = config.x;
-        this.y = config.y;
-        this.w = config.w;
-        this.h = config.h;
+        const {x, y, w, h} = config;
+        super(1, x, y, w, h, true, 'player');
 
         this.name = 'player';
         this.type = config.type;
@@ -37,6 +25,8 @@ export default class Player extends Character implements IPlayer {
         this.maxJumpQuantity = config.maxJumpQuantity;
         this._restoreHealth = config.restoreHealth;
         this.oldY = this.y;
+
+        this._bus.subscribe('player:attack', () => this.attack(entities));
     }
 
     public async update(timestamp: number, dt: number): Promise<void> {
