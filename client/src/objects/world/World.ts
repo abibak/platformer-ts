@@ -8,6 +8,7 @@ import Chunk from "@/objects/world/Chunk";
 import ChunkGenerator from "@/objects/world/ChunkGenerators/ChunkGenerator";
 import ForestGenerator from "@/objects/world/ChunkGenerators/ForestGenerator";
 import VillageGenerator from "@/objects/world/ChunkGenerators/VillageGenerator";
+import Player from "@/objects/characters/Player";
 
 enum ChunkTypes {
     Forest = 'forest',
@@ -20,17 +21,20 @@ export default class World {
     private _chunkSize: number = 10;
     private _chunks: Chunk[][] = [];
     private _renderChunks: Chunk[] = [];
+    private _visibleChunks: Chunk[] = [];
     private _library: Library;
     private _canvas: Canvas;
+	private _player: Player;
     private _bus: EventBus;
     private _brain: Brain;
     private _chunkGenerators: { [key: string]: ChunkGenerator } = {};
 
-    public constructor(width: number, height: number, library: Library, canvas: Canvas, bus: EventBus, player: Character) {
+    public constructor(width: number, height: number, library: Library, canvas: Canvas, bus: EventBus, player: Player) {
         this._width = width;
         this._height = height;
         this._library = library;
         this._canvas = canvas;
+		this._player = player;
         this._bus = bus;
         this._brain = new Brain(this._canvas, [player]);
 
@@ -44,7 +48,21 @@ export default class World {
         await this.renderBackground();
         await this._brain.update();
         await this.drawChunks();
+		await this.getVisibleChunks();
     }
+
+	private async getVisibleChunks() {
+		const renderSize = 1;
+
+		for (const subArr of this._chunks) {
+			for (const chunk of subArr) {
+
+				if (this._player.x >= chunk.data.x && this._player.y >= chunk.data.y) {
+
+				}
+			}
+		}
+	}
 
     private async renderBackground(): Promise<void> {
         this._canvas.drawBackground(this._library.images().background.img);

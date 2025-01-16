@@ -38,7 +38,7 @@ export default class Chunk {
         let tileRaw: Tile[] = [];
 
         let startChunkX = (this._numberY) * (this._chunkSize * 64); // initial Y
-        let startChunkY = (this._numberX + 1) * (this._chunkSize * 64); // initial X
+        let startChunkY = (this._numberX) * (this._chunkSize * 64); // initial X
 
         this._data.x = startChunkY;
         this._data.y = startChunkX;
@@ -50,7 +50,6 @@ export default class Chunk {
                 let tY = startChunkX - (tileY * 64);
 
                 const img: ImageManager = this._library.tiles()['tile_' + 10]; // temp
-
                 const tile: Tile = new Tile(tX, tY, 64, 64, false, img.img, this._canvas);
 
                 tileRaw[tileY] = tile;
@@ -72,6 +71,10 @@ export default class Chunk {
 
     public get id(): number {
         return this._id;
+    }
+
+    public get data(): { x: number; y: number } {
+        return this._data;
     }
 
     public get tiles(): Tile[][] {

@@ -37,7 +37,7 @@ export default class EventBus {
     }
 
     public unsubscribe(eventType: string) {
-        // delete this._subscribes[eventType];
+        delete this._subscribes[eventType];
     }
 
     private generateId(): number {
