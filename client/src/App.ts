@@ -21,8 +21,8 @@ export default class App {
     public constructor() {
         this._canvas = Canvas.getInstance();
         this._bus = EventBus.getInstance();
-        this._library = Library.getInstance();
         this._screen = new MenuScreen();
+        this._library = Library.getInstance();
         this._socket = new Socket(this._bus);
         this._keyboardController = new KeyboardController;
         this._mouseController = new MouseController();
@@ -52,6 +52,7 @@ export default class App {
             );
 
             this.subscribeEvents();
+            this._bus.publish('game:init');
         } catch (e) {
             throw e;
         }

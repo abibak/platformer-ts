@@ -44,7 +44,7 @@ export default abstract class UIElement {
             }
         });
 
-        document.addEventListener('mousemove', (e) => {
+        document.addEventListener('mousemove', (e: MouseEvent) => {
             if (this.clickable) {
                 if (this.checkHover(e.pageX, e.pageY)) {
                     this.isHover = true;
@@ -99,12 +99,7 @@ export default abstract class UIElement {
     }
 
     public addEvent(event: string, action: string): void {
-        this._events.push({
-            event,
-            action
-        });
-
-        console.log(this._events)
+        this._events.push({ event, action });
     }
 
     public abstract draw();

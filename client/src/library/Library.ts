@@ -1,10 +1,4 @@
 // Library - класс для загрузки всех ресурсов игры
-
-// progress load - формируется на основе положительного результат выполнения промиса
-// если промис отклонен, дальнейшая загрузка прерывается
-// если totalLoaded равен needLoaded, считается, что загрузка заверешена на 100% (банально но, работает)
-
-
 import ImageManager from "@/library/ImageManager";
 import AudioManager from "@/library/AudioManager";
 import {SoundEntity} from "@/types/main";
@@ -68,13 +62,24 @@ export default class Library {
     }
 
     private async loadAllResources(): Promise<void> {
+        const chunks = [];
+        const chunkLimit = 5;
         const loadPromises: Promise<void>[] = this._loaders.map(loader => loader.load());
-        const results: PromiseSettledResult<any>[] = await Promise.allSettled(loadPromises);
+        const results: PromiseSettledResult<any>[] = [];
+
+        for (let i = 0; i < loadPromises.length; i += chunkLimit) {
+            chunks.push(loadPromises.slice(i, i + chunkLimit));
+        }
+
+        for (const chunk of chunks) {
+            results.push(...(await Promise.allSettled(chunk)));
+        }
 
         this._needLoad = loadPromises.length;
         this._totalLoaded = (results.filter((result, index) => {
             if (result.status === 'fulfilled') {
-                this.progress(index + 1);
+                let percent = Math.trunc((index + 1) / 49 * 100);
+                this._canvas.drawProgressLoad(percent);
                 return true;
             }
 
@@ -152,12 +157,6 @@ export default class Library {
         this._loaders.push(loader);
         return loader;
     }
-
-    private progress(index): void {
-        const progress: number = Math.round(index / this._needLoad * 100);
-        this._canvas.drawProgressLoad(progress);
-    }
-
 
     public sounds(): SoundEntity {
         return this._sounds;
