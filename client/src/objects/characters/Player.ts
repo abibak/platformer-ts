@@ -1,6 +1,7 @@
 import Character from "./Character";
 import {IPlayer, PlayerConfig} from "@/types/game";
 import GameObject from "@/objects/world/GameObject";
+import configSpritePlayer from "@/assets/data-sprites/player.json";
 
 export default class Player extends Character implements IPlayer {
     private _restoreHealth: number;
@@ -26,13 +27,15 @@ export default class Player extends Character implements IPlayer {
         this._restoreHealth = config.restoreHealth;
         this.oldY = this.y;
 
+        this.setSpriteConfig();
+
         this._bus.subscribe('player:attack', () => this.attack(entities));
     }
 
     public async update(timestamp: number, dt: number): Promise<void> {
         super.update(timestamp, dt);
 
-        await this._canvas.drawHealthPlayer(this.health, this.maxHealth);
+        this._canvas.drawHealthPlayer(this.health, this.maxHealth);
 
         if (!this._lastTime) {
             this._lastTime = timestamp;
@@ -43,6 +46,10 @@ export default class Player extends Character implements IPlayer {
         if (deltaTime >= 1000) {
             this._lastTime = timestamp;
         }
+    }
+
+    protected setSpriteConfig(): any {
+        this._spriteConfig = configSpritePlayer
     }
 
     public restoreHealth(value: number): void {

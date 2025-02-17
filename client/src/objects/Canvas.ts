@@ -1,4 +1,3 @@
-import Screen from "@/objects/screens/Screen";
 /* UI Button options */
 type ButtonOptions = {
 	x: number;
@@ -138,8 +137,6 @@ export default class Canvas {
 
 		const scale = Math.round((progress * 3) / 300 * 100);
 
-		console.log(Screen.screenWidth);
-
 		setTimeout(() => {
 			this._ctx.fillStyle = 'red';
 			this._ctx.fillRect(301, 301, (scale * 4) - 2, 10);
@@ -149,5 +146,19 @@ export default class Canvas {
 	public drawNearbyTiles(tile) {
 		this._ctx.fillStyle = 'red';
 		this._ctx.fillRect(tile.x, tile.y, tile.w, tile.h);
+	}
+
+	public testDrawBorderChunk(data) {
+		this._ctx.strokeStyle = 'red';
+		this._ctx.lineWidth = 1;
+		this._ctx.strokeRect(data.x, data.y, data.w, data.h);
+
+		this._ctx.font = '32px Main Font';
+		this._ctx.fillText(`CHUNK ID = ${data.id}`, data.x, data.y);
+	}
+
+	public testFillColorChunks(data) {
+		this._ctx.fillStyle = 'red';
+		this._ctx.fillRect(data.x, data.y, data.w, data.h);
 	}
 }

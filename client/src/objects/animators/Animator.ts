@@ -21,7 +21,6 @@ export default class Animator {
     private _lastTime: number = 0;
 
     private readonly _instanceTypeName: string = '';
-    //private _path: string;
     private _actionData: any;
     private _action: string;
 
@@ -44,18 +43,6 @@ export default class Animator {
 
         this._action = action;
     }
-
-    /*public setPath(path: any, actionData: DataSprite): void {
-        this._actionData = actionData;
-
-        if (path.status !== this._action) {
-            this.finish = false;
-            this._currentFrame = 0;
-            this._frameScale = 0;
-        }
-
-        this._action = path.status;
-    }*/
 
     public async update(timestamp): Promise<void> {
         if (!this._lastTime) {

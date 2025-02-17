@@ -79,7 +79,7 @@ export default class Library {
         this._totalLoaded = (results.filter((result, index) => {
             if (result.status === 'fulfilled') {
                 let percent = Math.trunc((index + 1) / 49 * 100);
-                this._canvas.drawProgressLoad(percent);
+                //this._canvas.drawProgressLoad(percent);
                 return true;
             }
 

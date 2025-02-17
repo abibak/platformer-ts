@@ -1,43 +1,43 @@
 import {IEnemy} from "@/types/game";
-import Canvas from "@/objects/Canvas";
 import Character from "@/objects/characters/Character";
-import EventBus from "@/EventBus";
-import Library from "@/library/Library";
+import configSpriteEnemies from "@/assets/data-sprites/enemies.json";
 
 export default class Enemy extends Character implements IEnemy {
-    public speed: number = 1.05;
+	public speed: number = 1.05;
 
-    public constructor(
-        bus: EventBus,
-        canvas: Canvas,
-        config: any,
-    ) {
-        super('enemy');
-        this.type = 'enemy';
+	public constructor(config: any) {
+		super('enemy');
+		this.type = 'enemy';
 
-        this.x = config.x;
-        this.y = config.y;
-        this.w = config.w;
-        this.h = config.h;
-        this.health = config.health;
-        this.maxHealth = config.maxHealth;
-        this.damage = config.damage;
-        this.speed = config.speed;
-        this.jumpHeight = 50;
-        this.maxJumpHeight = 20;
+		this.x = config.x;
+		this.y = config.y;
+		this.w = config.w;
+		this.h = config.h;
+		this.health = config.health;
+		this.maxHealth = config.maxHealth;
+		this.damage = config.damage;
+		this.speed = config.speed;
+		this.jumpHeight = 50;
+		this.maxJumpHeight = 20;
 
-        this._bus.subscribe('enemy:onAttackFrame', (frame) => {
-            console.log('attack', frame)
-        });
-    }
+		this.setSpriteConfig();
 
-    public async update(timestamp: number, dt: number): Promise<void> {
-        super.update(timestamp, dt);
+		this._bus.subscribe('enemy:onAttackFrame', (frame) => {
+			console.log('attack', frame)
+		});
+	}
 
-        this._canvas.drawHealthEnemy({
-            x: this.x,
-            y: this.y,
-            hp: this.health
-        });
-    }
+	public async update(timestamp: number, dt: number): Promise<void> {
+		super.update(timestamp, dt);
+
+		this._canvas.drawHealthEnemy({
+			x: this.x,
+			y: this.y,
+			hp: this.health
+		});
+	}
+
+	protected setSpriteConfig(): any {
+		this._spriteConfig = configSpriteEnemies[this.name];
+	}
 }

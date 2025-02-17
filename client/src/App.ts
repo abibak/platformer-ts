@@ -59,11 +59,12 @@ export default class App {
     }
 
     public async update() {
-        this._screen.render();
+
     }
 
     public setScreen(screen: Screen) {
         this._screen = screen;
+        this._screen.render();
     }
 
     private subscribeEvents(): void {

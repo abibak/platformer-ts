@@ -14,7 +14,7 @@ export default class MenuScreen extends Screen {
         this.createButtons();
     }
 
-    public update(): void {
+    public async update(): Promise<void> {
 
     }
 

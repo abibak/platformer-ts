@@ -1,3 +1,4 @@
+import App from '@/App';
 import Player from '../objects/characters/Player';
 import World from '../objects/world/World';
 import EventBus from '../EventBus';
@@ -6,14 +7,11 @@ import KeyboardController from '../controllers/KeyboardController';
 import MouseController from '../controllers/MouseController';
 import Camera from '../objects/Camera';
 import Collision from '@/objects/Collision';
-import CollisionHandler from '@/handlers/CollisionHandler';
 import Character from '@/objects/characters/Character';
 import playerConfig from '@/assets/data/player.json';
 import GameObject from '@/objects/world/GameObject';
-import { filterAliveEntities } from '@/utils/utils';
 import GameObjectsStore from '@/state/GameObjectsStore';
 import Library from '@/library/Library';
-import App from '@/App';
 import GameScreen from '@/objects/screens/GameScreen';
 
 export default class Game {
@@ -43,7 +41,7 @@ export default class Game {
 	) {
 		this._app = app;
 		this._library = Library.getInstance();
-		this._gameObjectsStore = new GameObjectsStore();
+		this._gameObjectsStore = GameObjectsStore.getInstance();
 		this._bus = bus;
 		this._canvas = Canvas.getInstance();
 		this._collision = new Collision();
@@ -51,8 +49,6 @@ export default class Game {
 		this._mouseController = mouseController;
 
 		this.subscribeEvents();
-
-		requestAnimationFrame(this.update.bind(this));
 
 		//this._library.sounds().lightAmbient2.play();
 	}
@@ -63,14 +59,14 @@ export default class Game {
 			'toggleClickState',
 			this._mouseController.toggleStateClick.bind(this._mouseController)
 		);
-		this._bus.subscribe(
+
+		// отмена фильтрации
+		/*this._bus.subscribe(
 			'game:filterEntities',
 			() => (this._gameObjects = filterAliveEntities(this._gameObjects))
-		);
+		);*/
 		// стоит вынести addGameEntity непосредственно в GameObject, чтобы при создании экземпляра вызывать метод в Game
-		this._bus.subscribe('game:addGameEntity', (obj: GameObject) =>
-			this.addGameEntity(obj)
-		);
+		this._bus.subscribe('game:addGameEntity', (obj: GameObject) => this.addGameEntity(obj));
 	}
 
 	private async init(): Promise<void> {
@@ -78,16 +74,11 @@ export default class Game {
 			this._gameState = '';
 			await this.createPlayer();
 			this._camera = new Camera(this._player, this._canvas);
-			this._world = new World(
-				5,
-				3,
-				this._library,
-				this._canvas,
-				this._bus,
-				this._player
-			);
+			this._world = new World(5, 5, this._library, this._canvas, this._bus, this._player);
 			this._app.setScreen(new GameScreen());
+			await this._world.render();
 			this._bus.unsubscribe('game:init');
+			await this.update(0);
 		} catch (error) {
 			console.log('Ошибка инициализации.', error);
 		}
@@ -95,10 +86,8 @@ export default class Game {
 
 	private async createPlayer(): Promise<void> {
 		try {
-			const player: Player = new Player(playerConfig, this._gameObjects);
-			this._player = this._gameObjectsStore.add(player);
-			this._player.mode = 'debug';
-			this._gameObjects.push(this._player);
+			this._player = this._gameObjectsStore.add(new Player(playerConfig, this._gameObjects));
+			this._player.mode = 'default';
 		} catch (e) {
 			throw e;
 		}
@@ -108,7 +97,7 @@ export default class Game {
 		this._gameObjects.push(obj);
 	}
 
-	// изменить локигу фильтрации коллизий
+	// изменить логику фильтрации коллизий
 	// проверять коллизию только в текущем чанке
 	private handleCollision(): void {
 		let filterArrGameObjects: GameObject[] = [];
@@ -131,7 +120,7 @@ export default class Game {
 
 				// фильтрация массива в диапазоне 128px по x, y
 				filterArrGameObjects = this._gameObjects.filter((obj: GameObject) => {
-					const { x: objX, y: objY, id: objId } = obj;
+					const {x: objX, y: objY, id: objId} = obj;
 					let objType: string = '';
 
 					// установить тип, если объект является Character
@@ -155,7 +144,7 @@ export default class Game {
 
 				// обработка коллизии
 				filterArrGameObjects.forEach((obj: GameObject): void => {
-					if (!obj.collidable) {
+					if (!this._player.collidable || !obj.collidable) {
 						return;
 					}
 
@@ -180,7 +169,6 @@ export default class Game {
 		}
 
 		const dt: number = (timestamp - this._lastTime) / 1000;
-
 		this._lastTime = timestamp;
 
 		this._canvas.clearCanvas();
@@ -189,6 +177,7 @@ export default class Game {
 			await this._camera.update();
 			await this.render(timestamp);
 
+			// for now only for characters
 			for (const obj of this._gameObjects) {
 				if (obj instanceof Character) {
 					await obj.update(timestamp, dt);
@@ -210,7 +199,7 @@ export default class Game {
 
 	private async render(timestamp: number): Promise<void> {
 		await this._world.update(timestamp);
-		await this._canvas.drawHealthPlayer(
+		this._canvas.drawHealthPlayer(
 			this._player.health,
 			this._player.maxHealth
 		);

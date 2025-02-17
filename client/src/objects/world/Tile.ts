@@ -5,6 +5,7 @@ type TileTypes = 0 | 1;
 
 export default class Tile extends GameObject {
     private static _staticId: number = 0;
+    private _rendered: boolean = false;
     public type: TileTypes = 0;
     public img: HTMLImageElement;
 
@@ -30,6 +31,8 @@ export default class Tile extends GameObject {
                 h: this.h,
                 img: this.img
             });
+
+            this._rendered = true;
         }
     }
 }

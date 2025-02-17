@@ -6,8 +6,8 @@ import Canvas from "@/objects/Canvas";
 export default abstract class Screen {
 	protected bus: EventBus;
 	protected library: Library;
+	protected _ctx: Canvas;
 	private _uiComponents: UIElement[] = [];
-	private _ctx: Canvas;
 	public static screenWidth: number = 0;
 	public static screenHeight: number = 0;
 
@@ -39,7 +39,7 @@ export default abstract class Screen {
 		return this._uiComponents;
 	}
 
-	abstract update(): void;
+	abstract update(): Promise<void>;
 
 	abstract render(): void;
 }

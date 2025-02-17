@@ -1,15 +1,15 @@
 import Screen from "@/objects/screens/Screen";
 
 export default class GameScreen extends Screen {
-    public constructor() {
-        super();
-    }
+	public constructor() {
+		super();
+	}
 
-    public render(): void {
+	public async render() {
+		//await this.bus.publish('world:render');
+	}
 
-    }
+	public async update(): Promise<void> {
 
-    public update(): void {
-
-    }
+	}
 }

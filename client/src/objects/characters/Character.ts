@@ -5,8 +5,6 @@ import Canvas from "../Canvas";
 import EventBus from "@/EventBus";
 import Library from "@/library/Library";
 import {SpriteActionList} from "@/types/main";
-import configSpritePlayer from "@/assets/data-sprites/player.json";
-import configSpriteEnemies from "@/assets/data-sprites/enemies.json";
 import GameObject from "@/objects/world/GameObject";
 
 export default class Character extends Entity implements ICharacter {
@@ -43,7 +41,7 @@ export default class Character extends Entity implements ICharacter {
     public collisionY: string = '';
 
     protected vy: number = 0;
-    protected gravity: number = 0.45;
+    protected gravity: number = 0.70;
 
     protected animator: Animator;
     protected action: string = '';
@@ -53,7 +51,7 @@ export default class Character extends Entity implements ICharacter {
     protected readonly _canvas: Canvas;
 
     private static currentId: number = 0;
-    private _config: SpriteActionList | null;
+    protected _spriteConfig: SpriteActionList | null;
 
     public constructor(
         id: number,
@@ -73,7 +71,6 @@ export default class Character extends Entity implements ICharacter {
 
         this._bus.subscribe('animator:animationFinish', this.animationFinish.bind(this));
 
-        this._config = this.getConfig();
         this.setInstanceAnimation();
     }
 
@@ -109,24 +106,12 @@ export default class Character extends Entity implements ICharacter {
         await this.updateAnimation(); // обработка состояние персонажа
 
         const getActionImage = this._library.sprites()[this.name][this.action];
-        const actionData = this._config.frames[this.action];
+        const actionData = this._spriteConfig.frames[this.action];
 
         actionData.img = getActionImage.img;
 
         this.animator.setAnimation(this.action, this.reflectSprite(actionData));
         await this.animator.update(timestamp);
-    }
-
-    protected getConfig(): SpriteActionList | null {
-        if (this.type === 'player') {
-            return configSpritePlayer;
-        }
-
-        if (this.type === 'enemy') {
-            return configSpriteEnemies[this.name];
-        }
-
-        return null;
     }
 
     public reflectSprite(data: any): any {
@@ -244,7 +229,7 @@ export default class Character extends Entity implements ICharacter {
     }
 
     public async attack(entities: GameObject[]): Promise<void> {
-        const {w: w, h: h} = await this.getConfig();
+        const {w: w, h: h} = this._spriteConfig;
 
         let startX: number;
         let endX: number;

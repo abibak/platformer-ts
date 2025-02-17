@@ -1,9 +1,12 @@
+import EventBus from "@/EventBus";
+
 export default abstract class GameObject {
     private _id: number;
     private _x: number;
     private _y: number;
     private _width: number;
     private _height: number;
+    protected _bus: EventBus;
     public collidable: boolean;
 
     public constructor(id: number, x: number, y: number, width: number, height: number, collidable: boolean) {
@@ -13,6 +16,9 @@ export default abstract class GameObject {
         this._width = width;
         this._height = height;
         this.collidable = collidable;
+        this._bus = EventBus.getInstance();
+
+        this._bus.publish('game:addGameEntity', this);
     }
 
     public get id() {
