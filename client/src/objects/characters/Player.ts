@@ -13,7 +13,7 @@ export default class Player extends Character implements IPlayer {
         entities: GameObject[]
     ) {
         const {x, y, w, h} = config;
-        super(1, x, y, w, h, true, 'player');
+        super(x, y, w, h, false, 'player');
 
         this.name = 'player';
         this.type = config.type;

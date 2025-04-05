@@ -1,5 +1,4 @@
 import Character from "@/objects/characters/Character";
-import {GameObject} from "@/types/game";
 
 export async function loadImage(modulePath: string): Promise<string | null> {
     try {
@@ -11,8 +10,7 @@ export async function loadImage(modulePath: string): Promise<string | null> {
     }
 }
 
-export function filterAliveEntities(entities: GameObject[]): GameObject[] {
-    return entities.filter((obj: Character) => {
-        return !obj.isDead;
-    });
+export function random(max: number, min: number): number {
+    return Math.floor(Math.random() * (max - min + 1) + min);
 }
+

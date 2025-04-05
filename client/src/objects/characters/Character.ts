@@ -1,298 +1,315 @@
-import Entity from "../entities/Entity";
-import {ICharacter} from "@/types/game";
-import Animator from "../animators/Animator";
-import Canvas from "../Canvas";
-import EventBus from "@/EventBus";
-import Library from "@/library/Library";
-import {SpriteActionList} from "@/types/main";
-import GameObject from "@/objects/world/GameObject";
+import Entity from '../entities/Entity';
+import { ICharacter } from '@/types/game';
+import Animator from '../animators/Animator';
+import Canvas from '../Canvas';
+import EventBus from '@/EventBus';
+import Library from '@/library/Library';
+import { SpriteActionList } from '@/types/main';
+import GameObject from '@/objects/world/GameObject';
+import AnimationState from '@/objects/characters/AnimationState';
 
 export default class Character extends Entity implements ICharacter {
-    public mode: 'debug' | 'default' = 'default';
-    public isIdle: boolean = false;
-    public isWalk: boolean = false;
-    public isMovingLeft: boolean = false;
-    public isMovingRight: boolean = false;
-    public isAttack: boolean = false;
-    public isHurt: boolean = false;
-    public onGround: boolean = false;
-    public isDead: boolean = false;
-    public isFacingLeft: boolean = false;
-    public speed: number = 0;
-    public speedMultiplier: number = 1;
-    public isJump: boolean = false;
-    public jumpQuantity: number = 0;
-    public maxJumpQuantity: number = 2;
-    public jumpHeight: number = 10;
-    public maxJumpHeight: number = 10;
+	public isIdle: boolean = false;
+	public isWalk: boolean = false;
+	public isFacingLeft: boolean = false;
+	public isDead: boolean = false;
+	public isAttack: boolean = false;
+	public isHurt: boolean = false;
+	public isJump: boolean = false;
+	public isFall: boolean = false;
+	public isMovingLeft: boolean = false;
+	public isMovingRight: boolean = false;
 
-    // для класса Brain
-    public movementPoints: {
-        length: number,
-        startX: number,
-        startY: number,
-    } = {
-        length: 0,
-        startX: 0,
-        startY: 0,
-    };
+	public onGround: boolean = false;
+	public speed: number = 0;
+	public health: number;
+	public maxHealth: number;
+	public damage: number;
+	public speedMultiplier: number = 1;
 
-    public collisionX: string = '';
-    public collisionY: string = '';
+	public jumpQuantity: number = 0;
+	public maxJumpQuantity: number = 2;
+	public jumpHeight: number = 10;
+	public maxJumpHeight: number = 10;
 
-    protected vy: number = 0;
-    protected gravity: number = 0.70;
+	// для класса Brain
+	public movementPoints: {
+		length: number;
+		startX: number;
+		startY: number;
+	} = {
+		length: 0,
+		startX: 0,
+		startY: 0,
+	};
 
-    protected animator: Animator;
-    protected action: string = '';
+	public collisionX: string = '';
+	public collisionY: string = '';
 
-    protected readonly _bus: EventBus;
-    protected readonly _library: Library;
-    protected readonly _canvas: Canvas;
+	public mode: 'debug' | 'default' = 'default';
 
-    private static currentId: number = 0;
-    protected _spriteConfig: SpriteActionList | null;
+	protected vy: number = 0;
+	protected gravity: number = 0.6;
 
-    public constructor(
-        id: number,
-        x: number,
-        y: number,
-        w: number,
-        h: number,
-        collidable: boolean,
-        type: string
-    ) {
-        super(id, x, y, w, h, collidable);
-        this._canvas = Canvas.getInstance();
-        this._bus = EventBus.getInstance();
-        this._library = Library.getInstance();
-        this.type = type;
-        this.id = Character.generateId();
+	protected animator: Animator;
+	protected action: string = '';
 
-        this._bus.subscribe('animator:animationFinish', this.animationFinish.bind(this));
+	protected readonly _bus: EventBus;
+	protected readonly _library: Library;
+	protected readonly _canvas: Canvas;
+	protected readonly _animationState: AnimationState;
 
-        this.setInstanceAnimation();
-    }
+	private static currentId: number = 0;
+	protected _spriteConfig: SpriteActionList | null;
 
-    private static generateId(): number {
-        return this.currentId++;
-    }
+	public constructor(
+		x: number,
+		y: number,
+		w: number,
+		h: number,
+		collidable: boolean,
+		type: string
+	) {
+		super(x, y, w, h, collidable);
+		this._canvas = Canvas.getInstance();
+		this._bus = EventBus.getInstance();
+		this._library = Library.getInstance();
+		this._animationState = new AnimationState();
+		this.type = type;
+		this.id = Character.generateId();
+		this.setStates();
+		this._bus.subscribe(
+			'animator:animationFinish',
+			this.animationFinish.bind(this)
+		);
 
-    private animationFinish(animationName: string): void {
-        if (animationName === 'attack') {
-            this._library.sounds().swordMiss.finish();
-            this._library.sounds().swordAttack.finish();
-            this.isAttack = false;
-            this._bus.publish('toggleClickState', this.isAttack);
-        }
+		this.setInstanceAnimation();
+	}
 
-        if (animationName === 'death') {
-            this._bus.publish('game:filterEntities');
-        }
+	private static generateId(): number {
+		return this.currentId++;
+	}
 
-        if (animationName === 'hurt') {
-            this.isHurt = false;
-        }
-    }
+	private setStates(): void {
+		this._animationState.setState(
+			'idle',
+			() => this.isIdle && !this.isJump && !this.isFall && !this.isDead
+		);
+		this._animationState.setState(
+			'attack',
+			() => this.isAttack && !this.isDead && !this.isHurt
+		);
+		this._animationState.setState('hurt', () => this.isHurt);
+		this._animationState.setState('jump', () => this.isJump && !this.isAttack);
+		this._animationState.setState('fall', () => this.isFall && !this.isAttack);
+		this._animationState.setState(
+			'run',
+			() => !this.isIdle && !this.isAttack && !this.isDead && !this.isJump && !this.isFall && this.type !== 'enemy'
+		);
+		this._animationState.setState(
+			'walk',
+			() =>
+				(this.isMovingLeft || this.isMovingRight) &&
+				!this.isDead &&
+				this.type === 'enemy'
+		);
+	}
 
-    public async update(timestamp: number, dt: number): Promise<void> {
-        if (this.mode === 'default') {
-            this.adjustVerticalMovement(dt);
-            this.adjustHorizontalMovement(dt);
-        }
+	// вынести в отдельный класс Animation
+	private animationFinish(animationName: string): void {
+		if (animationName === 'attack') {
+			this._library.sounds().swordMiss.finish();
+			this._library.sounds().swordAttack.finish();
+			this.isAttack = false;
+			this._bus.publish('toggleClickState', this.isAttack);
+		}
 
-        this.onGround = false;
+		if (animationName === 'death') {
+			this._bus.publish('game:filterEntities');
+		}
 
-        await this.updateAnimation(); // обработка состояние персонажа
+		if (animationName === 'hurt') {
+			this.isHurt = false;
+		}
+	}
 
-        const getActionImage = this._library.sprites()[this.name][this.action];
-        const actionData = this._spriteConfig.frames[this.action];
+	public async update(timestamp: number, dt: number): Promise<void> {
+		if (this.mode === 'default') {
+			this.adjustVerticalMovement(dt);
+			this.adjustHorizontalMovement(dt);
+		}
 
-        actionData.img = getActionImage.img;
+		this.onGround = false;
 
-        this.animator.setAnimation(this.action, this.reflectSprite(actionData));
-        await this.animator.update(timestamp);
-    }
+		await this.updateAnimation(); // обработка состояние персонажа
 
-    public reflectSprite(data: any): any {
-        let temp = {
-            y: this.y,
-            scaleX: 0,
-            scaleY: 1,
-        };
+		const getActionImage = this._library.sprites()[this.name][this.action];
+		const actionData = this._spriteConfig.frames[this.action];
 
-        if (this.isFacingLeft) {
-            data.x = -(this.x + (this.w));
-            temp.scaleX = -1;
-        } else {
-            data.x = this.x;
-            temp.scaleX = 1;
-        }
+		actionData.img = getActionImage.img;
 
-        return {...data, ...temp};
-    }
+		this.animator.setAnimation(this.action, this.reflectSprite(actionData));
+		await this.animator.update(timestamp);
+	}
 
-    public async updateAnimation(): Promise<any> {
-        if (this.isDead) {
-            this.action = 'death';
-        }
+	public reflectSprite(data: any): any {
+		let temp = {
+			y: this.y,
+			scaleX: 0,
+			scaleY: 1,
+		};
 
-        if (!(this.isMovingLeft || this.isMovingRight) && !this.isJump && !this.isFall && !this.isDead) {
-            this.isIdle = true;
-            this.action = 'idle';
-        }
+		if (this.isFacingLeft) {
+			data.x = -(this.x + this.w);
+			temp.scaleX = -1;
+		} else {
+			data.x = this.x;
+			temp.scaleX = 1;
+		}
 
-        if ((this.isMovingLeft || this.isMovingRight) && !this.isDead) {
-            if (this.type === 'enemy') {
-                this.action = 'walk';
-            } else {
-                this.action = 'run';
-            }
-        }
+		return { ...data, ...temp };
+	}
 
-        if (this.isHurt && !this.isDead) {
-            this.action = 'hurt';
-        }
+	public async updateAnimation(): Promise<any> {
+		const states = this._animationState.getStates();
 
-        if (this.isJump && !this.isDead) {
-            this.action = 'jump';
-        }
+		for (let [state, condition] of states.entries()) {
+			if (condition()) {
+				this.action = state;
+			}
+		}
+	}
 
-        if (this.isFall) {
-            if (this.type === 'enemy') {
-                this.action = 'idle';
-            } else {
-                this.action = 'fall';
-            }
-        }
+	public setInstanceAnimation(): void {
+		this.animator = new Animator(this._canvas, this._bus, this.type);
+	}
 
-        if (this.isAttack && !this.isDead && !this.isHurt) {
-            this.action = 'attack';
-        }
-    }
+	public startMovingLeft(): void {
+		if (!this.isMovingRight) {
+			this.isMovingLeft = true;
+			this.isFacingLeft = true;
+		}
+	}
 
-    public setInstanceAnimation(): void {
-        this.animator = new Animator(this._canvas, this._bus, this.type);
-    }
+	public startMovingRight(): void {
+		if (!this.isMovingLeft) {
+			this.isMovingRight = true;
+			this.isFacingLeft = false;
+		}
+	}
 
-    public startMovingLeft(): void {
-        if (!this.isMovingRight) {
-            this.isMovingLeft = true;
-            this.isFacingLeft = true;
-        }
-    }
+	public stopMovingLeft(): void {
+		this.isMovingLeft = false;
+	}
 
-    public startMovingRight(): void {
-        if (!this.isMovingLeft) {
-            this.isMovingRight = true;
-            this.isFacingLeft = false;
-        }
-    }
+	public stopMovingRight(): void {
+		this.isMovingRight = false;
+	}
 
-    public stopMovingLeft(): void {
-        this.isMovingLeft = false;
-    }
+	protected adjustVerticalMovement(dt: number): void {
+		this.fall(dt);
+	}
 
-    public stopMovingRight(): void {
-        this.isMovingRight = false;
-    }
+	protected adjustHorizontalMovement(dt: number): void {
+		if (!this.isDead) {
+			this.isIdle = !(this.isMovingLeft || this.isMovingRight);
 
-    protected adjustVerticalMovement(dt: number): void {
-        this.fall(dt);
-    }
+			if (this.isMovingLeft && !this.isAttack) {
+				this.x -= this.speed * this.speedMultiplier * dt;
+			}
 
-    protected adjustHorizontalMovement(dt: number): void {
-        if (!this.isDead) {
-            if (this.isMovingLeft && !this.isAttack) {
-                this.x -= (this.speed * this.speedMultiplier) * dt;
-            }
+			if (this.isMovingRight && !this.isAttack) {
+				this.x += this.speed * this.speedMultiplier * dt;
+			}
+		}
+	}
 
-            if (this.isMovingRight && !this.isAttack) {
-                this.x += (this.speed * this.speedMultiplier) * dt;
-            }
-        }
-    }
+	private isFalling() {
+		this.isFall = this.y > this.oldY;
+		this.oldY = this.y;
+	}
 
-    public fall(dt: number): void {
-        // Cвободное падения
-        if (!this.onGround) {
-            this.vy += this.gravity;
-            this.y += this.vy;
-        } else {
-            this.jumpQuantity = 0;
-            this.isJump = false;
-            this.isFall = false;
-            this.vy = 0;
-        }
+	public fall(dt: number): void {
+		// Cвободное падения
+		if (!this.onGround) {
+			this.vy += this.gravity;
+			this.y += Math.ceil(this.vy);
+			
+		} else {
+			this.jumpQuantity = 0;
+			this.isJump = false;
+			this.isFall = false;
+			this.vy = 0;
+		}
 
-        this.oldY = this.y;
-    }
+		this.isFalling();
+	}
 
-    public async attack(entities: GameObject[]): Promise<void> {
-        const {w: w, h: h} = this._spriteConfig;
+	public async attack(entities: GameObject[]): Promise<void> {
+		const { w: w, h: h } = this._spriteConfig;
 
-        let startX: number;
-        let endX: number;
+		let startX: number;
+		let endX: number;
 
-        this.isAttack = true;
+		this.isAttack = true;
 
-        if (!this.isFacingLeft) {
-            startX = this.x + this.w / 2;
-            endX = this.x + w;
-        } else {
-            startX = (this.x + this.w) - this.w / 2;
-            endX = (this.x + this.w) - w;
-        }
+		if (!this.isFacingLeft) {
+			startX = this.x + this.w / 2;
+			endX = this.x + w;
+		} else {
+			startX = this.x + this.w - this.w / 2;
+			endX = this.x + this.w - w;
+		}
 
-        for (const entity: Character of entities) {
-            const {x: x, y: y, width: w, height: h} = entity;
+		for (const entity: Character of entities) {
+			const { x: x, y: y, width: w, height: h } = entity;
 
-            // если противник находится в диапазоне атаки справа или слева
-            // добавить условие по y
-            if ((entity.x >= startX && entity.x <= endX) ||
-                (entity.x + entity.w >= endX && entity.x <= startX)
-            ) {
-                if (entity instanceof Character) {
-                    this._library.sounds().swordAttack.play();
-                    entity.getHurt(this.damage);
-                }
+			// если противник находится в диапазоне атаки справа или слева
+			// добавить условие по y
+			if (
+				(entity.x >= startX && entity.x <= endX) ||
+				(entity.x + entity.w >= endX && entity.x <= startX)
+			) {
+				if (entity instanceof Character) {
+					this._library.sounds().swordAttack.play();
+					entity.getHurt(this.damage);
+				}
+			}
+		}
 
-            }
-        }
+		this._library.sounds().swordMiss.play();
+	}
 
-        this._library.sounds().swordMiss.play();
-    }
+	dead(): void {
+		this.isDead = true;
+		this._bus.publish('game:filterColliders');
+	}
 
-    dead(): void {
-        this.isDead = true;
-        this._bus.publish('game:filterColliders');
-    }
+	getHurt(damage: number): void {
+		if (damage >= this.health) {
+			this.health = 0;
+			this.dead();
+			return;
+		}
 
-    getHurt(damage: number): void {
-        if (damage >= this.health) {
-            this.health = 0;
-            this.dead();
-            return;
-        }
+		this.isHurt = true;
+		this.health -= damage;
+	}
 
-        this.isHurt = true;
-        this.health -= damage;
-    }
+	jump(): void {
+		this._library.sounds().jump.play();
 
-    jump(): void {
-        this._library.sounds().jump.play();
+		this.jumpQuantity++;
 
-        this.jumpQuantity++;
+		if (this.jumpQuantity >= this.maxJumpQuantity) {
+			this.jumpHeight = 0.8 * this.jumpHeight;
+		}
 
-        if (this.jumpQuantity >= this.maxJumpQuantity) {
-            this.jumpHeight = (0.8 * this.jumpHeight);
-        }
-
-        if (this.jumpQuantity <= this.maxJumpQuantity) {
-            this.vy = -this.jumpHeight;
-            this.onGround = false;
-            this.isJump = false;
-            this.jumpHeight = this.maxJumpHeight;
-        }
-    }
+		if (this.jumpQuantity <= this.maxJumpQuantity) {
+			this.vy = -this.jumpHeight;
+			this.onGround = false;
+			this.isJump = false;
+			this.jumpHeight = this.maxJumpHeight;
+		}
+	}
 }

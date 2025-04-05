@@ -10,9 +10,9 @@ export default class Camera {
     public x: number = 0;
     public y: number = 0;
 
-    public constructor(target: Character, canvas: Canvas) {
+    public constructor(target: Character) {
         this._target = target;
-        this._canvas = canvas;
+        this._canvas = Canvas.getInstance();
     }
 
     public async update(): Promise<void> {

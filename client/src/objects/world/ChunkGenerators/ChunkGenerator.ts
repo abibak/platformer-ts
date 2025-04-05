@@ -6,9 +6,9 @@ export default abstract class ChunkGenerator {
      protected _canvas: Canvas;
      protected _library: Library;
 
-     protected constructor(canvas: Canvas, library: Library) {
-          this._canvas = canvas;
-          this._library = library;
+     protected constructor() {
+          this._canvas = Canvas.getInstance();
+          this._library = Library.getInstance();
      }
 
      abstract generate(chunk: Chunk): void;

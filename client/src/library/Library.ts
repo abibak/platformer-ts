@@ -103,7 +103,8 @@ export default class Library {
         this._images = {
             background: this.addLoader(new ImageManager('images/backgrounds/background3.jpg')),
             startMenu: this.addLoader(new ImageManager('images/backgrounds/start-menu-background.png')),
-            grass1: this.addLoader(new ImageManager('images/sprites/w-elements/grass.png'))
+            grass1: this.addLoader(new ImageManager('images/world/grass1.png')),
+            tree1: this.addLoader(new ImageManager('images/world/tree1.png')),
         }
     }
 
@@ -116,7 +117,7 @@ export default class Library {
                 jump: this.addLoader(new ImageManager('images/sprites/player/jump.png')),
                 run: this.addLoader(new ImageManager('images/sprites/player/run.png')),
                 hurt: this.addLoader(new ImageManager('images/sprites/player/hurt.png')),
-                death: this.addLoader(new ImageManager('images/sprites/player/death.png'))
+                death: this.addLoader(new ImageManager('images/sprites/player/death.png')),
             },
             fireWarm: {
                 idle: this.addLoader(new ImageManager('images/sprites/enemies/fire-warm/idle.png')),

@@ -2,286 +2,301 @@ import Canvas from "../Canvas";
 import EventBus from "../../EventBus";
 import Brain from "@/objects/characters/Brain";
 import Library from "@/library/Library";
-import Tile from "@/objects/world/Tile";
 import Chunk from "@/objects/world/Chunk";
 import ChunkGenerator from "@/objects/world/ChunkGenerators/ChunkGenerator";
 import ForestGenerator from "@/objects/world/ChunkGenerators/ForestGenerator";
 import VillageGenerator from "@/objects/world/ChunkGenerators/VillageGenerator";
 import Player from "@/objects/characters/Player";
+import {random} from '@/utils/utils';
 
-enum ChunkTypes {
-	Forest = 'forest',
-	Village = 'village'
+enum GeneratorTypes {
+    Forest = 'forestGenerator',
+    Village = 'villageGenerator',
 }
 
 export default class World {
-	private _width: number = 0; // number horizontal chunks
-	private _height: number = 0; // number vertical chunks
-	private _chunkSize: number = 10;
-	private _chunks: Chunk[][] = [];
-	private _renderChunks: Chunk[] = [];
-	private _library: Library;
-	private _canvas: Canvas;
-	private _player: Player;
-	private _bus: EventBus;
-	private _brain: Brain;
-	private _chunkGenerators: { [key: string]: ChunkGenerator } = {};
+    private _width: number = 0; // number horizontal chunks
+    private _height: number = 0; // number vertical chunks
+    private _chunkSize: number = 10;
+    private _chunks: Chunk[][] = [];
+    private _renderChunks: Chunk[] = [];
+    private _player: Player;
+    private _brain: Brain;
+    private _chunkGenerators: { [key: string]: ChunkGenerator } = {};
+    private _surfaceData: {
+        width: number;
+        height: number;
+        move: number;
+    } = {
+        width: 4,
+        height: 0,
+        move: 0,
+    }
 
-	public constructor(width: number, height: number, library: Library, canvas: Canvas, bus: EventBus, player: Player) {
-		this._width = width;
-		this._height = height;
-		this._library = library;
-		this._canvas = canvas;
-		this._player = player;
-		this._bus = bus;
-		this._brain = new Brain(this._canvas, [player]);
+    private readonly _library: Library;
+    private readonly _canvas: Canvas;
+    private readonly _bus: EventBus;
 
-		this._chunkGenerators['forestGenerator'] = new ForestGenerator(canvas, library);
-		this._chunkGenerators['villageGenerator'] = new VillageGenerator(canvas, library);
+    public constructor(width: number, height: number, player: Player) {
+        this._library = Library.getInstance();
+        this._canvas = Canvas.getInstance();
+        this._bus = EventBus.getInstance();
+        this._width = width;
+        this._height = height;
+        this._player = player;
+        this._brain = new Brain(this._canvas, [player]);
+        this._surfaceData.height = this._chunkSize- 1;
+        this._chunkGenerators['forestGenerator'] = new ForestGenerator();
+        this._chunkGenerators['villageGenerator'] = new VillageGenerator();
 
-		this.generateWorld();
+        this.generateWorld();
+        this._bus.subscribe('world:render', this.render.bind(this));
+    }
 
-		this._bus.subscribe('world:render', this.render.bind(this));
-	}
+    public async render() {
+        await this.renderBackground();
+        await this.drawChunks();
+        await this.getVisibleChunks();
 
-	public async render() {
-		await this.renderBackground();
-		await this.drawChunks();
-		await this.getVisibleChunks();
-	}
+        //this._canvas.drawWorldObject(0, -351, 216, 351, this._library.images().tree1.img);
+    }
 
-	public async update(timestamp: number): Promise<void> {
-		await this._brain.update();
-		await this.render();
-	}
+    public async update(timestamp: number): Promise<void> {
+        await this._brain.update();
+        await this.render();
 
-	// нужно определить две переменные: renderX и renderY,
-	// renderX - количество чанков для отрисовки по X,
-	// renderY - количество чанков для отрисовки по Y
-	private async getVisibleChunks() {
-		// вправо и влево от начального чанка, в котором находится персонаж
-		const renderSize = 2;
+        for (let y = 0; y < this._chunks.length; y++) {
+            for (let x = 0; x < this._chunks[y].length; x++) {
+                await this._chunks[y][x].update(timestamp);
+            }
+        }
+    }
 
-		for (const subArr of this._chunks) {
-			for (const chunk of subArr) {
-				this._canvas.testDrawBorderChunk({
-					id: chunk.id,
-					x: chunk.data.x,
-					y: chunk.data.y,
-					w: chunk.data.size,
-					h: chunk.data.size,
-				})
+    // нужно определить две переменные: renderX и renderY,
+    // renderX - количество чанков для отрисовки по X,
+    // renderY - количество чанков для отрисовки по Y
+    private async getVisibleChunks() {
+        // вправо и влево от начального чанка, в котором находится персонаж
+        const renderSize = 2;
 
-				const startX = chunk.data.x;
-				const endX = chunk.data.x + chunk.data.size;
+        for (const subArr of this._chunks) {
+            for (const chunk of subArr) {
+                this._canvas.testDrawBorderChunk({
+                    id: chunk.id,
+                    x: chunk.data.x,
+                    y: chunk.data.y,
+                    w: chunk.data.size,
+                    h: chunk.data.size,
+                })
 
-				const startY = chunk.data.y;
-				const endY = chunk.data.y + chunk.data.size;
+                const startX = chunk.data.x;
+                const endX = chunk.data.x + chunk.data.size;
 
-				const rendererChunks: Chunk[] = [];
-				let currentChunk: Chunk;
+                const startY = chunk.data.y;
+                const endY = chunk.data.y + chunk.data.size;
 
-				if (
-					this._player.x >= startX &&
-					this._player.x <= endX &&
-					this._player.bottom() >= startY &&
-					this._player.top() <= endY
-				) {
-					currentChunk = chunk;
-				}
+                const rendererChunks: Chunk[] = [];
+                let currentChunk: Chunk;
 
-				if (currentChunk) {
-					// чанки по y которые нужно рендерить
-					let rows = [];
-					let r = 0;
-					// начальные значения по Y
-					let tY = currentChunk.numberY;
-					let lY = currentChunk.numberY;
+                if (
+                    this._player.x >= startX &&
+                    this._player.x <= endX &&
+                    this._player.bottom() >= startY &&
+                    this._player.top() <= endY
+                ) {
+                    currentChunk = chunk;
+                }
 
-					const currentLine = this._chunks[currentChunk.numberY];
+                if (currentChunk) {
+                    // чанки по y которые нужно рендерить
+                    let rows = [];
+                    let r = 0;
+                    // начальные значения по Y
+                    let tY = currentChunk.numberY;
+                    let lY = currentChunk.numberY;
 
-					rows.push(currentLine);
+                    const currentLine = this._chunks[currentChunk.numberY];
 
-					// получить все чанки по Y
-					while (r < renderSize) {
-						if (this._chunks[tY - 1]) {
-							tY -= 1;
-							let line: Chunk[] = this._chunks[tY];
-							rows.push(line);
-						}
+                    rows.push(currentLine);
 
-						if (this._chunks[lY + 1]) {
-							lY += 1;
-							let line: Chunk[] = this._chunks[lY];
-							rows.push(this._chunks[lY]);
-						}
+                    // получить все чанки по Y
+                    while (r < renderSize) {
+                        if (this._chunks[tY - 1]) {
+                            tY -= 1;
+                            let line: Chunk[] = this._chunks[tY];
+                            rows.push(line);
+                        }
 
-						r++;
-					}
+                        if (this._chunks[lY + 1]) {
+                            lY += 1;
+                            let line: Chunk[] = this._chunks[lY];
+                            rows.push(this._chunks[lY]);
+                        }
 
-					for (const row of rows) {
-						rendererChunks.push(...this.getChunksInRange(row, renderSize, currentChunk.numberX));
-					}
+                        r++;
+                    }
 
-					this._renderChunks = rendererChunks;
-				}
-			}
-		}
-	}
+                    for (const row of rows) {
+                        rendererChunks.push(...this.getChunksInRange(row, renderSize, currentChunk.numberX));
+                    }
 
-	private getChunksInRange(line: Chunk[], range: number, start: number): Chunk[] {
-		let i = 0;
-		let l = start;
-		let r = start;
+                    this._renderChunks = rendererChunks;
+                }
+            }
+        }
+    }
 
-		let chunks = [];
+    private getChunksInRange(line: Chunk[], range: number, start: number): Chunk[] {
+        let i = 0;
+        let l = start;
+        let r = start;
 
-		chunks.push(line[start]);
+        let chunks = [];
 
-		while (i < range) {
-			if (line[r + 1]) {
-				let right = line[r += 1];
-				chunks.push(right);
-			}
+        chunks.push(line[start]);
 
-			if (line[l - 1]) {
-				let left = line[l -= 1];
-				chunks.push(left);
-			}
+        while (i < range) {
+            if (line[r + 1]) {
+                let right = line[r += 1];
+                chunks.push(right);
+            }
 
-			i++;
-		}
+            if (line[l - 1]) {
+                let left = line[l -= 1];
+                chunks.push(left);
+            }
 
-		return chunks;
-	}
+            i++;
+        }
 
-	private async renderBackground(): Promise<void> {
-		this._canvas.drawBackground(this._library.images().background.img);
-	}
+        return chunks;
+    }
 
-	private getChunk(id: number): Chunk | null {
-		let foundChunkIndex: number = Math.ceil(id / this._width) - 1;
+    private async renderBackground(): Promise<void> {
+        this._canvas.drawBackground(this._library.images().background.img);
+    }
 
-		if (foundChunkIndex < 0 || foundChunkIndex > this._width - 1 || !this._chunks[foundChunkIndex]) {
-			console.warn('chunk by ID not found');
-			return null;
-		}
+    // private getChunk(id: number): Chunk | null {
+    //     let foundChunkIndex: number = Math.ceil(id / this._width) - 1;
+    //
+    //     if (foundChunkIndex < 0 || foundChunkIndex > this._width - 1 || !this._chunks[foundChunkIndex]) {
+    //         console.warn('chunk by ID not found');
+    //         return null;
+    //     }
+    //
+    //     return (this._chunks[foundChunkIndex].find((el: Chunk) => el.id === id)) || null;
+    // }
 
-		return (this._chunks[foundChunkIndex].find((el: Chunk) => el.id === id)) || null;
-	}
+    private createChunksArray(): void {
+        let chunk: Chunk[] = [];
 
-	private createChunkArray(): void {
-		let chunk: Chunk[] = [];
+        for (let y = 0; y < this._height; y++) {
+            for (let x = 0; x < this._width; x++) {
+                let chunkGenerator: ChunkGenerator = null;
 
-		for (let y = 0; y < this._height; y++) {
-			for (let x = 0; x < this._width; x++) {
-				let newChunk: Chunk = new Chunk(x, y, this._library, this._canvas);
+                if (y === 0) {
+                    let chunkTypes: GeneratorTypes[] = Object.values(GeneratorTypes);
+                    //let randomType: string = chunkTypes[random(chunkTypes.length - 1, 0)] + 'Generator';
+                    //chunkGenerator = this._chunkGenerators[randomType];
+                    chunkGenerator = this._chunkGenerators['forestGenerator'];
+                }
 
-				if (y === 0) {
-					let chunkTypes: ChunkTypes[] = Object.values(ChunkTypes);
-					let randomType: string = chunkTypes[this.random(chunkTypes.length - 1, 0)] + 'Generator';
-					let generator: ChunkGenerator = this._chunkGenerators[randomType];
+                let newChunk: Chunk = new Chunk(x, y, chunkGenerator);
+                chunk.push(newChunk);
+            }
 
-					generator.generate(newChunk);
-				}
+            this._chunks.push(chunk);
+            chunk = [];
+        }
+    }
 
-				chunk.push(newChunk);
-			}
+    // скрестить с функцией fillChunks
+    private generateChunkTiles(chunk: Chunk) {
+        chunk.createTilesArray();
+    }
 
-			this._chunks.push(chunk);
-			chunk = [];
-		}
-	}
+    // генерация поверхности
+    private surfaceGeneration(chunk: Chunk) {
+        /* height - устанавливать значение после получение чанка (this.chunkSize) */
+        if (chunk === null) {
+            return;
+        }
 
-	// скрестить с функцией fillChunks
-	private generateChunkTiles() {
-		for (let y = 0; y < this._height; y++) {
-			for (let x = 0; x < this._width; x++) {
-				this._chunks[y][x].createTilesArray();
-				// после создания массива тайлов, сразу же заполнить его, для избежания дублирования кода
-				// сделать заполнение сразу после y = 1
-				// this._chunks[y][x].fillTiles();
-			}
-		}
-	}
+        for (let tileX = 0; tileX < chunk.tiles.length; tileX++) {
+            if (this._surfaceData.move >= this._surfaceData.width) {
+                const next: number = random(1, 0);
 
-	private fillChunks(): void {
-		for (let y = 1; y < this._height; y++) {
-			for (let x = 0; x < this._width; x++) {
-				this._chunks[y][x].fillTiles();
-			}
-		}
-	}
+                if (next == 1) {
+                    if (this._surfaceData.height - 1 > 0) {
+                        this._surfaceData.height--;
+                    }
+                }
 
-	private surfaceGeneration(): void {
-		let move = 0;
-		let width = 3;
-		let height = this._chunkSize - 1;
+                if (next == 0) {
+                    if (this._surfaceData.height + 1 < this._chunkSize - 1) {
+                        this._surfaceData.height++;
+                    }
+                }
+                this._surfaceData.move = 0;
+            }
 
-		// генерация поверхности только для первых чанков по горизонтали
-		// от цикла можно избавиться
-		for (let y = 0; y < 1; y++) {
-			for (let x = 0; x < this._width; x++) {
-				const chunk: Chunk | null = this.getChunk(this._chunks[y][x].id);
+            this._surfaceData.move++;
 
-				/* height - устанавливать значение после получение чанка (this.chunkSize) */
+            chunk.tileRowData.push({
+                indexRow: tileX,
+                heightFilled: this._surfaceData.height,
+            });
 
-				if (chunk === null) {
-					return;
-				}
+            //console.log(chunk.id, this._surfaceData.height, tileX)
 
-				for (let tileX = 0; tileX < chunk.tiles.length; tileX++) {
-					if (move >= width) {
-						const next: number = this.random(1, 0);
+            for (let tileY = this._surfaceData.height; tileY >= 0; tileY--) {
+                chunk.tiles[tileX][tileY].type = 1;
+                chunk.tiles[tileX][tileY].collidable = true;
+            }
+        }
 
-						if (next == 1) {
-							if (height - 1 > 0) {
-								height--;
-							}
-						}
+        this._surfaceData.move++;
+    }
 
-						if (next == 0) {
-							if (height + 1 < this._chunkSize - 1) {
-								height++;
-							}
-						}
-						move = 0;
-					}
+    private async drawChunks() {
+        for (let chunk of this._renderChunks) {
+            const tiles = chunk.tiles;
 
-					move++;
+            for (let subArr of tiles) {
+                for (let tile of subArr) {
+                    await tile.draw();
+                }
+            }
+        }
+    }
 
-					for (let tileY = height; tileY >= 0; tileY--) {
-						chunk.tiles[tileX][tileY].type = 1;
-						chunk.tiles[tileX][tileY].collidable = true;
-					}
-				}
-			}
-		}
+    private processGenerateChunk(): void {
+        let surfaceGenerated: boolean = false;
 
-		move++;
-	}
+        for (let y = 0; y < this._height; ++y) {
+            for (let x = 0; x < this._width; x++) {
+                const chunk = this._chunks[y][x];
+                this.generateChunkTiles(chunk);
 
-	private async drawChunks() {
-		for (let chunk of this._renderChunks) {
-			const tiles = chunk.tiles
+                if (!surfaceGenerated) {
+                    this.surfaceGeneration(chunk);
+                }
 
-			for (let subArr of tiles) {
-				for (let tile of subArr) {
-					await tile.draw();
-				}
-			}
-		}
-	}
+                if (y > 0) {
+                    chunk.fillTiles();
+                }
 
-	public async generateWorld() {
-		this.createChunkArray();
-		this.generateChunkTiles();
-		this.surfaceGeneration();
-		this.fillChunks();
-		console.log(this._chunks)
-	}
+                chunk.runGenerator();
+            }
 
-	private random(max: number, min: number): number {
-		return Math.floor(Math.random() * (max - min + 1) + min);
-	}
+            surfaceGenerated = true;
+        }
+    }
+
+    public async generateWorld() {
+        this.createChunksArray();
+        this.processGenerateChunk();
+
+        console.log(this._chunks)
+    }
 }

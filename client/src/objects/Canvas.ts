@@ -67,6 +67,10 @@ export default class Canvas {
 		this._ctx.drawImage(img, 0 - this.xOffset, 0 - this.yOffset, this.width, this.height);
 	}
 
+	public drawWorldObject(x, y: number, w: number, h: number, img: HTMLImageElement): void {
+		this._ctx.drawImage(img, x, y, w, h);
+	}
+
 	public drawTile(tile): void {
 		/*this._ctx.strokeStyle = 'red';
 		this._ctx.lineWidth = .2;
@@ -158,7 +162,7 @@ export default class Canvas {
 	}
 
 	public testFillColorChunks(data) {
-		this._ctx.fillStyle = 'red';
+		this._ctx.fillStyle = 'green';
 		this._ctx.fillRect(data.x, data.y, data.w, data.h);
 	}
 }

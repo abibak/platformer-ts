@@ -1,32 +1,45 @@
 import EventBus from "@/EventBus";
+import Canvas from "@/objects/Canvas";
 
-export default abstract class GameObject {
-    private _id: number;
+export default class GameObject {
+    private static _id: number;
     private _x: number;
     private _y: number;
+    private _oldX: number = 0;
+    private _oldY: number = 0;
     private _width: number;
     private _height: number;
-    protected _bus: EventBus;
-    public collidable: boolean;
 
-    public constructor(id: number, x: number, y: number, width: number, height: number, collidable: boolean) {
-        this._id = id;
+    protected _bus: EventBus;
+    protected _canvas: Canvas;
+
+    public collidable: boolean;
+    public img: HTMLImageElement;
+
+    public constructor(x: number, y: number, width: number, height: number, collidable: boolean, img?: HTMLImageElement) {
+        GameObject._id += 1;
         this._x = x;
         this._y = y;
         this._width = width;
         this._height = height;
         this.collidable = collidable;
+        this.img = img;
         this._bus = EventBus.getInstance();
+        this._canvas = Canvas.getInstance();
 
         this._bus.publish('game:addGameEntity', this);
     }
 
+    public draw(): void {
+        this._canvas.drawWorldObject(this._x, this._y, this._width, this._height, this.img);
+    }
+
     public get id() {
-        return this._id;
+        return GameObject._id;
     }
 
     public set id(value: number) {
-        this._id = value;
+        GameObject._id = value;
     }
 
     public get x() {
@@ -37,12 +50,28 @@ export default abstract class GameObject {
         this._x = value;
     }
 
+    public set oldX(value: number) {
+        this._oldX = value;
+    }
+
+    public get oldX() {
+        return this._oldX;
+    }
+
     public get y() {
         return this._y;
     }
 
     public set y(value: number) {
         this._y = value;
+    }
+
+    public set oldY(value: number) {
+        this._oldY = value;
+    }
+
+    public get oldY() {
+        return this._oldY;
     }
 
     public get w() {

@@ -13,6 +13,7 @@ import GameObject from '@/objects/world/GameObject';
 import GameObjectsStore from '@/state/GameObjectsStore';
 import Library from '@/library/Library';
 import GameScreen from '@/objects/screens/GameScreen';
+import {log} from "node:util";
 
 export default class Game {
 	private readonly _app: App;
@@ -29,9 +30,10 @@ export default class Game {
 	private _gameObjects: GameObject[] = [];
 	private _gameState: string = 'pause';
 
+	public static TEST: any[] = [];
+
 	private _frame;
 	private _lastTime: number = 0;
-	private tickRate: number = 1000 / 60;
 
 	public constructor(
 		app: App,
@@ -51,6 +53,10 @@ export default class Game {
 		this.subscribeEvents();
 
 		//this._library.sounds().lightAmbient2.play();
+	}
+
+	public static setForTest(item: any) {
+		this.TEST.push(item);
 	}
 
 	private subscribeEvents(): void {
@@ -73,8 +79,8 @@ export default class Game {
 		try {
 			this._gameState = '';
 			await this.createPlayer();
-			this._camera = new Camera(this._player, this._canvas);
-			this._world = new World(5, 5, this._library, this._canvas, this._bus, this._player);
+			this._camera = new Camera(this._player);
+			this._world = new World(5, 5, this._player);
 			this._app.setScreen(new GameScreen());
 			await this._world.render();
 			this._bus.unsubscribe('game:init');
@@ -87,7 +93,7 @@ export default class Game {
 	private async createPlayer(): Promise<void> {
 		try {
 			this._player = this._gameObjectsStore.add(new Player(playerConfig, this._gameObjects));
-			this._player.mode = 'default';
+			this._player.mode = 'debug';
 		} catch (e) {
 			throw e;
 		}
@@ -102,25 +108,17 @@ export default class Game {
 	private handleCollision(): void {
 		let filterArrGameObjects: GameObject[] = [];
 
-		// возможно добавить свойство filterGameObjects и изменять в случае вызова игрового события изменения состояния мира
-		// то есть при любом изменении вызвать filterGameObjects и обновить данные в массиве
-		// но, GameObject объекты могут изменять свое положение в процессе игры и это будет поводом для вызова "события",
-		// поэтому вероятность вызова 99.9%
-		// в таком случае нужно составить массив с измененными объектами, которые вызвали событие и работать непосредственно с ними
-		// на данный момент массив постоянно пересобирается заново, даже если состояния не изменяются, либо же кешировать
-		// засталяет задуматься, но все ради оптимизации, я так думаю :-)
 		this._gameObjects.forEach((entity: GameObject): void => {
 			if (entity instanceof Character) {
 				const {
 					x: entityX,
 					y: entityY,
-					id: entityId,
 					type: entityType,
 				} = entity;
 
 				// фильтрация массива в диапазоне 128px по x, y
 				filterArrGameObjects = this._gameObjects.filter((obj: GameObject) => {
-					const {x: objX, y: objY, id: objId} = obj;
+					const {x: objX, y: objY} = obj;
 					let objType: string = '';
 
 					// установить тип, если объект является Character
@@ -133,7 +131,6 @@ export default class Game {
 					const dy: number = Math.abs(entityY - objY);
 
 					if (
-						entityId !== objId &&
 						entityType !== objType &&
 						dx <= 128 &&
 						dy <= 128
@@ -184,8 +181,8 @@ export default class Game {
 				}
 			}
 
-			await this.handleCollision();
-			await this.handleCharacterMovement();
+			this.handleCollision();
+			this.handleCharacterMovement();
 
 			if (this._library.sounds().lightAmbient2.ended) {
 				this._library.sounds().lightAmbient2.replay();
@@ -203,6 +200,15 @@ export default class Game {
 			this._player.health,
 			this._player.maxHealth
 		);
+
+		for (const item of Game.TEST) {
+			this._canvas.testFillColorChunks({
+				w: item.w,
+				h: item.h,
+				x: item.x,
+				y: item.y,
+			});
+		}
 	}
 
 	public defaultPlayerMovement(): void {
