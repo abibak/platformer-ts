@@ -1,4 +1,5 @@
 import GameObject from "@/objects/world/GameObject";
+import GameObjectsStore from "@/state/GameObjectsStore";
 
 type TileTypes = 0 | 1;
 
@@ -15,6 +16,8 @@ export default class Tile extends GameObject {
         img: HTMLImageElement,
     ) {
         super(x, y, w, h, collidable, img);
+        this.id = GameObjectsStore.tileId;
+        GameObjectsStore.incrementTileId();
     }
 
     public async update(timestamp: number) {

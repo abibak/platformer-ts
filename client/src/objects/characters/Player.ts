@@ -12,9 +12,9 @@ export default class Player extends Character implements IPlayer {
         config: PlayerConfig,
         entities: GameObject[]
     ) {
-        const {x, y, w, h} = config;
-        super(x, y, w, h, false, 'player');
+        super(config.x, config.y, config.w, config.h, true, 'player');
 
+        this.id = 1;
         this.name = 'player';
         this.type = config.type;
         this.speed = config.speed;

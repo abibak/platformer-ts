@@ -5,6 +5,8 @@ import {SoundEntity} from "@/types/main";
 import tilemap from "@/maps/map.json";
 import Canvas from "@/objects/Canvas";
 import EventBus from "@/EventBus";
+import world from "@/assets/data/world.json";
+import {ForestTreeTypes} from "@/types/game";
 
 type Loaders = AudioManager | ImageManager;
 type TileImage = { [key: string]: ImageManager }
@@ -103,8 +105,8 @@ export default class Library {
         this._images = {
             background: this.addLoader(new ImageManager('images/backgrounds/background3.jpg')),
             startMenu: this.addLoader(new ImageManager('images/backgrounds/start-menu-background.png')),
-            grass1: this.addLoader(new ImageManager('images/world/grass1.png')),
-            tree1: this.addLoader(new ImageManager('images/world/tree1.png')),
+            dragonwood_tree: this.addLoader(new ImageManager('images/world/dragonwood_tree.png')),
+            birch_tree: this.addLoader(new ImageManager('images/world/birch_tree.png')),
         }
     }
 
@@ -157,6 +159,10 @@ export default class Library {
     private addLoader<L extends Loaders>(loader: L): L {
         this._loaders.push(loader);
         return loader;
+    }
+
+    public getDataTree(treeName: string) {
+        return world.biomes.forest.trees[treeName];
     }
 
     public sounds(): SoundEntity {

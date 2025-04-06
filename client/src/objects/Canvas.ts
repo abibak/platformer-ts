@@ -67,7 +67,7 @@ export default class Canvas {
 		this._ctx.drawImage(img, 0 - this.xOffset, 0 - this.yOffset, this.width, this.height);
 	}
 
-	public drawWorldObject(x, y: number, w: number, h: number, img: HTMLImageElement): void {
+	public drawWorldObject(x: number, y: number, w: number, h: number, img: HTMLImageElement): void {
 		this._ctx.drawImage(img, x, y, w, h);
 	}
 

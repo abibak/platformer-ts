@@ -1,8 +1,21 @@
 {
-  "tree1": {
-    "w": 232,
-    "h": 315
+  "biomes": {
+    "forest": {
+      "trees": {
+        "dragonwood": {
+          "w": 129,
+          "h": 285,
+          "xOffset": 45
+        },
+        "birch": {
+          "w": 118,
+          "h": 311,
+          "xOffset": 41
+        }
+      }
+    }
   },
+
   "grass1": {
     "w": 43,
     "h": 22

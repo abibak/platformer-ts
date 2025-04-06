@@ -60,16 +60,7 @@ export interface PlayerConfig {
     restoreHealth: number;
 }
 
-export enum PlayerState {
-    Idle,
-    Fall,
-    Run,
-    Attack,
-    Jump
-}
-
-export enum FireWarmState {
-    Idle,
-    Walk,
-    Attack
+export enum ForestTreeTypes {
+    DragonWood = 'dragonwood',
+    Birch = 'birch',
 }

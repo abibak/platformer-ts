@@ -93,7 +93,7 @@ export default class Game {
 	private async createPlayer(): Promise<void> {
 		try {
 			this._player = this._gameObjectsStore.add(new Player(playerConfig, this._gameObjects));
-			this._player.mode = 'debug';
+			this._player.mode = 'default';
 		} catch (e) {
 			throw e;
 		}

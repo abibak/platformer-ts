@@ -59,7 +59,6 @@ export default class Character extends Entity implements ICharacter {
 	protected readonly _canvas: Canvas;
 	protected readonly _animationState: AnimationState;
 
-	private static currentId: number = 0;
 	protected _spriteConfig: SpriteActionList | null;
 
 	public constructor(
@@ -76,7 +75,6 @@ export default class Character extends Entity implements ICharacter {
 		this._library = Library.getInstance();
 		this._animationState = new AnimationState();
 		this.type = type;
-		this.id = Character.generateId();
 		this.setStates();
 		this._bus.subscribe(
 			'animator:animationFinish',
@@ -84,10 +82,6 @@ export default class Character extends Entity implements ICharacter {
 		);
 
 		this.setInstanceAnimation();
-	}
-
-	private static generateId(): number {
-		return this.currentId++;
 	}
 
 	private setStates(): void {

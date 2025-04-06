@@ -2,7 +2,7 @@ import EventBus from "@/EventBus";
 import Canvas from "@/objects/Canvas";
 
 export default class GameObject {
-    private static _id: number;
+    private _id: number = 0;
     private _x: number;
     private _y: number;
     private _oldX: number = 0;
@@ -16,8 +16,14 @@ export default class GameObject {
     public collidable: boolean;
     public img: HTMLImageElement;
 
-    public constructor(x: number, y: number, width: number, height: number, collidable: boolean, img?: HTMLImageElement) {
-        GameObject._id += 1;
+    public constructor(
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        collidable: boolean,
+        img?: HTMLImageElement
+    ) {
         this._x = x;
         this._y = y;
         this._width = width;
@@ -34,15 +40,15 @@ export default class GameObject {
         this._canvas.drawWorldObject(this._x, this._y, this._width, this._height, this.img);
     }
 
-    public get id() {
-        return GameObject._id;
+    public get id(): number {
+        return this._id;
     }
 
-    public set id(value: number) {
-        GameObject._id = value;
+    public set id(id: number) {
+        this._id = id;
     }
 
-    public get x() {
+    public get x(): number {
         return this._x;
     }
 

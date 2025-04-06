@@ -4,6 +4,8 @@ export default class GameObjectsStore {
     private static _instance: GameObjectsStore;
     private store: Map<number, GameObject> = new Map;
 
+    private static _tileId: number = 1;
+
     private constructor() {
 
     }
@@ -29,5 +31,17 @@ export default class GameObjectsStore {
         this.store.set(obj.id, proxyGameObject);
 
         return proxyGameObject;
+    }
+
+    public static incrementTileId() {
+        this._tileId++;
+    }
+
+    public static get tileId(): number {
+        return this._tileId;
+    }
+
+    public set tileId(value: number) {
+        //GameObjectsStore._tileId = value;
     }
 }
