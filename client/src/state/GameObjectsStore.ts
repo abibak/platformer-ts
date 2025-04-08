@@ -34,7 +34,7 @@ export default class GameObjectsStore {
     }
 
     public static incrementTileId() {
-        this._tileId++;
+        this._tileId += 1;
     }
 
     public static get tileId(): number {

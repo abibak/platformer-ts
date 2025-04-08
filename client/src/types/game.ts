@@ -64,3 +64,9 @@ export enum ForestTreeTypes {
     DragonWood = 'dragonwood',
     Birch = 'birch',
 }
+
+export const tilemapSettings = {
+    col: 3,
+    row: 2,
+    tileSize: 64,
+}

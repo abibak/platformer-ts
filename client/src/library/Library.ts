@@ -25,6 +25,7 @@ export default class Library {
     private _tiles: TileImage = {};
     private _images: TileImage = {};
     private _sprites = {};
+    private _tilemap: ImageManager;
     private _uiComponents = {};
 
     private _loaders: (ImageManager | AudioManager)[] = [];
@@ -51,16 +52,9 @@ export default class Library {
             this.prepareTiles(),
             this.prepareUIComponents(),
             this.prepareSprites(),
-            this.test()
         ]);
 
-        this.loadAllResources();
-    }
-
-    public async test() {
-        for (let i = 0; i < 1; i++) {
-            this.addLoader(new AudioManager('world/light_ambience1.wav'))
-        }
+        await this.loadAllResources();
     }
 
     private async loadAllResources(): Promise<void> {
@@ -143,17 +137,16 @@ export default class Library {
         }
     }
 
-    /*
-    * Тайлы импортируются динамически, используя номера тайла указанные в map.json
-    * */
     private async prepareTiles(): Promise<void> {
-        const keys: string[] = Object.keys(tilemap.level1.tiles);
+        this._tilemap = this.addLoader(new ImageManager('images/tilemaps/Tilemap_tiles.png'));
+
+        /*const keys: string[] = Object.keys(tilemap.level1.tiles);
 
         for (const key of keys) {
             if (key !== '0') {
                 this._tiles['tile_' + key] = this.addLoader(new ImageManager('tiles/Tile_' + key + '.png'));
             }
-        }
+        }*/
     }
 
     private addLoader<L extends Loaders>(loader: L): L {
@@ -183,5 +176,9 @@ export default class Library {
 
     public uiComponents() {
         return this._uiComponents;
+    }
+
+    public tilemap(): ImageManager {
+        return this._tilemap;
     }
 }

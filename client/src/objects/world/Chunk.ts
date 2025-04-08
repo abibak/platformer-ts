@@ -1,10 +1,14 @@
 import Tile from "@/objects/world/Tile";
-import ImageManager from "@/library/ImageManager";
 import Library from "@/library/Library";
 import Canvas from "@/objects/Canvas";
 import GameObjectsStore from "@/state/GameObjectsStore";
 import GameObject from "@/objects/world/GameObject";
 import ChunkGenerator from "@/objects/world/ChunkGenerators/ChunkGenerator";
+
+type tileRowData = {
+    indexRow: number;
+    heightFilled: number;
+}
 
 export default class Chunk {
     private readonly _id: number = 0;
@@ -27,11 +31,9 @@ export default class Chunk {
         size: 0
     }
 
-    public tileRowData: {
-        heightFilled: number;
-        indexRow: number;
-    }[] = [];
+    public visible: boolean = false;
 
+    public tileRowData: tileRowData[] = [];
     public objects: GameObject[] = [];
     public type: string = 'default';
 
@@ -65,10 +67,9 @@ export default class Chunk {
                 let tX = (tileX * 64) + startChunkY;
                 let tY = startChunkX + (tileY * 64);
 
-                const img: ImageManager = this._library.tiles()['tile_' + 10]; // temp
-                tileRaw[tileY] = this._gameObjectStore.add(
-                    new Tile(tX, tY, 64, 64, false, img.img)
-                );
+                //const img: ImageManager = this._library.tiles()['tile_' + 10]; // temp
+                const tile = new Tile(tX, tY, 64, 64, false, this._library.tilemap().img);
+                tileRaw[tileY] = this._gameObjectStore.add(tile);
             }
 
             if (this._numberY === 0) {
@@ -81,11 +82,54 @@ export default class Chunk {
         }
     }
 
-    public fillTiles(): void {
+    public handleFillSurface(): void {
+        for (let y = 0; y < this._tiles.length; y++) {
+            const topTile: Tile = this._tiles[y][this.tileRowData[y].heightFilled];
+
+            for (let x = 0; x < this._tiles[y].length; x++) {
+                //const tile: Tile = this._tiles[y][x];
+
+                const currentTile: tileRowData = this.tileRowData[y];
+                const nextTile: tileRowData = this.tileRowData[y + 1];
+                const prevTile: tileRowData = this.tileRowData[y - 1];
+
+                /* если одиночный тайл */
+                if (prevTile && nextTile) {
+                    if (prevTile.heightFilled < currentTile.heightFilled && nextTile.heightFilled < currentTile.heightFilled) {
+                        topTile.type = 4;
+                    }
+                }
+
+                // если предыдущего тайла нет (для первого чанка)
+                if (!prevTile && this.numberX === 0) {
+                    topTile.type = 1;
+                }
+
+                // если последующего тайла нет (для последнего чанка)
+                if (!nextTile && this.numberX >= 4) {
+                    topTile.type = 3;
+                }
+
+                // если предыдущая колонка тайлов меньше, чем текущая, то обозначить как открывающая
+                if (prevTile && prevTile.heightFilled < currentTile.heightFilled) {
+                    topTile.type = 1;
+                } else {
+                    topTile.type = 2;
+                }
+
+                // если следующая колонка тайлов меньше, чем текущая, то обозначить как закрывающая
+                if (nextTile && nextTile.heightFilled < currentTile.heightFilled) {
+                    topTile.type = 3;
+                }
+            }
+        }
+    }
+
+    public fillTiles() {
         for (let y = 0; y < this._tiles.length; y++) {
             for (let x = 0; x < this._tiles[y].length; x++) {
-                this._tiles[y][x].type = 1;
-                this._tiles[y][x].collidable = true;
+                const tile: Tile = this._tiles[y][x];
+                tile.type = 6;
             }
         }
     }

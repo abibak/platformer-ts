@@ -72,10 +72,15 @@ export default class Canvas {
 	}
 
 	public drawTile(tile): void {
-		/*this._ctx.strokeStyle = 'red';
+		this._ctx.strokeStyle = 'green';
 		this._ctx.lineWidth = .2;
-		this._ctx.strokeRect(tile.x, tile.y, tile.w, tile.h);*/
-		this._ctx.drawImage(tile.img, tile.x, tile.y, tile.w, tile.h);
+		this._ctx.strokeRect(tile.x, tile.y, tile.w, tile.h);
+
+		this._ctx.drawImage(tile.img, (tile.w * tile.type - 1) - tile.w, 0, tile.w, tile.h, tile.x, tile.y, tile.w, tile.w);
+
+		this._ctx.font = 'Verdana';
+		this._ctx.fillStyle = 'black';
+		this._ctx.fillText(tile.type, tile.x, tile.y + 20);
 	}
 
 	public drawAnimation(params): void {
@@ -158,6 +163,7 @@ export default class Canvas {
 		this._ctx.strokeRect(data.x, data.y, data.w, data.h);
 
 		this._ctx.font = '32px Main Font';
+		this._ctx.fillStyle = 'black';
 		this._ctx.fillText(`CHUNK ID = ${data.id}`, data.x, data.y);
 	}
 

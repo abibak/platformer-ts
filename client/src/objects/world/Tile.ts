@@ -1,11 +1,9 @@
 import GameObject from "@/objects/world/GameObject";
 import GameObjectsStore from "@/state/GameObjectsStore";
 
-type TileTypes = 0 | 1;
-
 export default class Tile extends GameObject {
-    private _rendered: boolean = false;
-    public type: TileTypes = 0;
+    public name: string = '';
+    public type = 0;
 
     public constructor(
         x: number,
@@ -25,16 +23,20 @@ export default class Tile extends GameObject {
     }
 
     public async draw(): Promise<void> {
-        if (this.type === 1) {
+        /*if (this.tempType !== '') {
+            this._canvas.testDrawTile(this);
+        }*/
+
+        if (this.type !== 0) {
             this._canvas.drawTile({
                 x: this.x,
                 y: this.y,
                 w: this.w,
                 h: this.h,
-                img: this.img
+                img: this.img,
+                type: this.type
             });
-
-            this._rendered = true;
         }
+
     }
 }

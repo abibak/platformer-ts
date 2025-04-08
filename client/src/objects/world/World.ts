@@ -28,7 +28,7 @@ export default class World {
         height: number;
         move: number;
     } = {
-        width: 4,
+        width: 3,
         height: 0,
         move: 0,
     }
@@ -45,7 +45,7 @@ export default class World {
         this._height = height;
         this._player = player;
         this._brain = new Brain(this._canvas, [player]);
-        this._surfaceData.height = this._chunkSize- 1;
+        this._surfaceData.height = this._chunkSize - 1;
         this._chunkGenerators['forestGenerator'] = new ForestGenerator();
         this._chunkGenerators['villageGenerator'] = new VillageGenerator();
 
@@ -53,12 +53,10 @@ export default class World {
         this._bus.subscribe('world:render', this.render.bind(this));
     }
 
-    public async render() {
+    public async render(): Promise<void> {
         await this.renderBackground();
         await this.drawChunks();
         await this.getVisibleChunks();
-
-        //this._canvas.drawWorldObject(0, -351, 216, 351, this._library.images().tree1.img);
     }
 
     public async update(timestamp: number): Promise<void> {
@@ -75,7 +73,7 @@ export default class World {
     // нужно определить две переменные: renderX и renderY,
     // renderX - количество чанков для отрисовки по X,
     // renderY - количество чанков для отрисовки по Y
-    private async getVisibleChunks() {
+    private async getVisibleChunks(): Promise<void> {
         // вправо и влево от начального чанка, в котором находится персонаж
         const renderSize = 2;
 
@@ -87,7 +85,7 @@ export default class World {
                     y: chunk.data.y,
                     w: chunk.data.size,
                     h: chunk.data.size,
-                })
+                });
 
                 const startX = chunk.data.x;
                 const endX = chunk.data.x + chunk.data.size;
@@ -210,13 +208,8 @@ export default class World {
         }
     }
 
-    // скрестить с функцией fillChunks
-    private generateChunkTiles(chunk: Chunk) {
-        chunk.createTilesArray();
-    }
-
     // генерация поверхности
-    private surfaceGeneration(chunk: Chunk) {
+    private surfaceGeneration(chunk: Chunk, first: boolean, last: boolean) {
         /* height - устанавливать значение после получение чанка (this.chunkSize) */
         if (chunk === null) {
             return;
@@ -247,13 +240,14 @@ export default class World {
                 heightFilled: this._surfaceData.height,
             });
 
-            //console.log(chunk.id, this._surfaceData.height, tileX)
-
             for (let tileY = this._surfaceData.height; tileY >= 0; tileY--) {
-                chunk.tiles[tileX][tileY].type = 1;
-                chunk.tiles[tileX][tileY].collidable = true;
+                const tile = chunk.tiles[tileX][tileY];
+                tile.type = 6;
+                tile.collidable = true;
             }
         }
+
+        chunk.handleFillSurface();
 
         this._surfaceData.move++;
     }
@@ -272,21 +266,27 @@ export default class World {
 
     private processGenerateChunk(): void {
         let surfaceGenerated: boolean = false;
+        let lastSurfaceChunk: boolean = false;
+        let firstSurfaceChunk: boolean = true;
 
         for (let y = 0; y < this._height; ++y) {
             for (let x = 0; x < this._width; x++) {
-                const chunk = this._chunks[y][x];
-                this.generateChunkTiles(chunk);
-
-                if (!surfaceGenerated) {
-                    this.surfaceGeneration(chunk);
+                if (x >= this._width) {
+                    lastSurfaceChunk = true;
                 }
 
-                if (y > 0) {
+                const chunk = this._chunks[y][x];
+                chunk.createTilesArray();
+
+                if (!surfaceGenerated) {
+                    this.surfaceGeneration(chunk, firstSurfaceChunk, lastSurfaceChunk);
+                } else {
                     chunk.fillTiles();
                 }
 
                 chunk.runGenerator();
+
+                firstSurfaceChunk = false;
             }
 
             surfaceGenerated = true;

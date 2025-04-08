@@ -35,6 +35,10 @@ export default class Player extends Character implements IPlayer {
     public async update(timestamp: number, dt: number): Promise<void> {
         super.update(timestamp, dt);
 
+        if (this.mode === 'debug') {
+            this.collidable = false;
+        }
+
         this._canvas.drawHealthPlayer(this.health, this.maxHealth);
 
         if (!this._lastTime) {

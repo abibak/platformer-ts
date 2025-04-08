@@ -93,7 +93,7 @@ export default class Game {
 	private async createPlayer(): Promise<void> {
 		try {
 			this._player = this._gameObjectsStore.add(new Player(playerConfig, this._gameObjects));
-			this._player.mode = 'default';
+			this._player.mode = 'debug';
 		} catch (e) {
 			throw e;
 		}
@@ -145,7 +145,7 @@ export default class Game {
 						return;
 					}
 
-					this._canvas.drawNearbyTiles(obj);
+					//this._canvas.drawNearbyTiles(obj);
 
 					const collisionInfo = this._collision.detectCollision(
 						this._player,
