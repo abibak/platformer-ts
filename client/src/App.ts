@@ -7,6 +7,8 @@ import Library from "@/library/Library";
 import Screen from "@/objects/screens/Screen";
 import MenuScreen from "@/objects/screens/MenuScreen";
 import Canvas from "@/objects/Canvas";
+import { log } from "node:console";
+import GameScreen from "./objects/screens/GameScreen";
 
 export default class App {
     private readonly _canvas: Canvas;
@@ -35,7 +37,6 @@ export default class App {
             this._bus.subscribe('library:loaded', () => {
                 console.log('library loaded');
                 this.init();
-                //this.start();
             });
         } catch (e) {
             console.log('Ошибка инициализации игры', e)
@@ -51,20 +52,23 @@ export default class App {
                 this._mouseController
             );
 
+            this._game.init();
             this.subscribeEvents();
-            this._bus.publish('game:init');
         } catch (e) {
             throw e;
         }
     }
 
     public async update() {
+        this._screen.update();
 
+        if (this._keyboardController.esc) {
+            this._game.gameState = 'pause';
+        }
     }
 
     public setScreen(screen: Screen) {
         this._screen = screen;
-        this._screen.render();
     }
 
     private subscribeEvents(): void {
@@ -72,12 +76,18 @@ export default class App {
         document.addEventListener('mouseup', this.handleInputMouse.bind(this));
         document.addEventListener('keydown', this.handleKeyboard.bind(this));
         document.addEventListener('keyup', this.handleKeyboard.bind(this));
+        this._bus.subscribe('keyboard:pressEsc', value => this.handleVisibleScreen(value));
+    }
+
+    private handleVisibleScreen(visible: boolean) {
+        if (this._screen instanceof GameScreen) {
+            this._game.gameState = visible ? 'pause' : 'started';
+        }
     }
 
     private handleInputMouse(event): void {
         if (event.type === 'mousedown' && event.which === 1) {
             this._mouseController.handleMouseEventDown(event);
-            //this._bus.publish('mouse:click');
         }
 
         // if (event.type === 'mouseup' && event.which === 1) {

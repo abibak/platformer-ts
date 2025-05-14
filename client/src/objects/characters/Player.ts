@@ -1,18 +1,13 @@
 import Character from "./Character";
-import {IPlayer, PlayerConfig} from "@/types/game";
-import GameObject from "@/objects/world/GameObject";
+import { IPlayer, PlayerConfig } from "@/types/game";
 import configSpritePlayer from "@/assets/data-sprites/player.json";
 
 export default class Player extends Character implements IPlayer {
     private _restoreHealth: number;
     private _lastTime: number = 0;
 
-    public constructor
-    (
-        config: PlayerConfig,
-        entities: GameObject[]
-    ) {
-        super(config.x, config.y, config.w, config.h, true, 'player');
+    public constructor(config: PlayerConfig) {
+        super(config.x, config.y, config.w, config.h, true, 'player', config.animations);
 
         this.id = 1;
         this.name = 'player';
@@ -28,12 +23,10 @@ export default class Player extends Character implements IPlayer {
         this.oldY = this.y;
 
         this.setSpriteConfig();
-
-        this._bus.subscribe('player:attack', () => this.attack(entities));
     }
 
-    public async update(timestamp: number, dt: number): Promise<void> {
-        super.update(timestamp, dt);
+    public async update(timestamp: number): Promise<void> {
+        super.update(timestamp);
 
         if (this.mode === 'debug') {
             this.collidable = false;

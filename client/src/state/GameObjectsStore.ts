@@ -1,14 +1,14 @@
 import GameObject from "@/objects/world/GameObject";
+import Character from "@/objects/characters/Character";
 
 export default class GameObjectsStore {
     private static _instance: GameObjectsStore;
-    private store: Map<number, GameObject> = new Map;
+    private _gameObjects: Map<number, GameObject> = new Map;
+    private _characters: Character[] = [];
 
     private static _tileId: number = 1;
 
-    private constructor() {
-
-    }
+    private constructor() {}
 
     public static getInstance(): GameObjectsStore {
         if (!this._instance) {
@@ -28,9 +28,17 @@ export default class GameObjectsStore {
             }
         });
 
-        this.store.set(obj.id, proxyGameObject);
+        if (obj instanceof Character) {
+            this._characters.push(obj);
+        } else {
+            this._gameObjects.set(obj.id, proxyGameObject);
+        }
 
         return proxyGameObject;
+    }
+
+    public get characters(): Character[] {
+        return this._characters;
     }
 
     public static incrementTileId() {

@@ -15,7 +15,7 @@ export default class MenuScreen extends Screen {
     }
 
     public async update(): Promise<void> {
-
+        this.render();
     }
 
     public render(): void {
@@ -29,7 +29,7 @@ export default class MenuScreen extends Screen {
         }
     }
 
-    private createStartGameButton(): Button {
+    private createStartGameButton(): Button {        
         return new Button(
             0,
             0,
@@ -48,7 +48,7 @@ export default class MenuScreen extends Screen {
             startGame,
         );
 
-        startGame.addEvent('click', 'game:init');
+        startGame.addEvent('click', 'game:start');
     }
 
     public createBackground() {

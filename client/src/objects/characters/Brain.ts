@@ -5,9 +5,9 @@ import Player from '@/objects/characters/Player';
 
 export default class Brain {
 	private _characters: AutomatedCharacter[] = [];
-	private _targets: Character[] = [];
+	private readonly _targets: Character[] = [];
 
-	public constructor(public canvas, targets: Character[]) {
+	public constructor(targets: Character[]) {
 		this._targets = targets;
 	}
 
@@ -42,7 +42,7 @@ export default class Brain {
 		}
 
 		this._targets.forEach((target: Player): void => {
-			const { x: x, y: y, width: w, height: h } = target;
+			const { x: x, y: y, w: w, h: h } = target;
 			// если цель находится в диапазоне двух значений от центра объекта и если цель находится в диапазоне высоты объекта
 			if (
 				x + w >= leftRange &&

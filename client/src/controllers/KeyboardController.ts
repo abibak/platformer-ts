@@ -1,19 +1,29 @@
+import EventBus from "@/EventBus";
+
 enum Keycodes {
     Jump = 87,
     Left = 65,
     Right = 68,
-    Down = 83
+    Down = 83,
+    Esc = 27,
 }
 
 export default class KeyboardController {
+    private _bus: EventBus;
+
     public jump: boolean = false;
     public left: boolean = false;
     public right: boolean = false;
     public top: boolean = false;
-    public down: boolean = false;
+    public down: boolean = false
+    public esc: boolean = false;
     public count: number = 0;
 
-    public onKeyDown(code: number): void {
+    public constructor() {
+        this._bus = EventBus.getInstance();
+    }
+
+    public onKeyDown(code: number): boolean | void {
         if (code === Keycodes.Jump) {
             this.top = true;
             this.count++;
@@ -36,6 +46,11 @@ export default class KeyboardController {
 
         if (code === Keycodes.Down) {
             this.down = true;
+        }
+
+        if (code === Keycodes.Esc) {
+            this.esc = !this.esc;
+            this._bus.publish('keyboard:pressEsc', this.esc);
         }
     }
 

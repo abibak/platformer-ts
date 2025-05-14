@@ -59,4 +59,3 @@ export interface SpriteActionList {
         [key in 'idle' | 'attack' | 'death' | 'hurt' | 'run' | 'jump' | 'fall']: DataSprite;
     }
 }
-

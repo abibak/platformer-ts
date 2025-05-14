@@ -10,7 +10,7 @@ export default class MouseController {
 
     public handleMouseEventDown(e) {
         this.click = true;
-        this._bus.publish('player:attack');
+        this._bus.publish('mouse:leftClick');
     }
 
     public handleMouseEventUp(e) {

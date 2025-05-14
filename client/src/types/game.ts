@@ -1,4 +1,5 @@
 import Character from "@/objects/characters/Character";
+import Entity from "@/objects/entities/Entity";
 
 export interface IEntity {
     type: string;
@@ -17,9 +18,9 @@ export interface ICharacter extends IEntity {
 
     jump(): void;
 
-    getHurt(damage: number): void;
+    getHurt(damage: number, entity: Entity): void;
 
-    dead(): void;
+    dead(entity: Entity): void;
 }
 
 export interface IPlayer extends ICharacter {
@@ -58,11 +59,16 @@ export interface PlayerConfig {
     maxHealth: number;
     damage: number;
     restoreHealth: number;
+    animations: string[];
 }
 
 export enum ForestTreeTypes {
     DragonWood = 'dragonwood',
     Birch = 'birch',
+}
+
+export enum EnemyTypes {
+    FireWarm = 'firewarm',
 }
 
 export const tilemapSettings = {

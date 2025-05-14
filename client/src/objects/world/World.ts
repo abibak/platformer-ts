@@ -8,6 +8,8 @@ import ForestGenerator from "@/objects/world/ChunkGenerators/ForestGenerator";
 import VillageGenerator from "@/objects/world/ChunkGenerators/VillageGenerator";
 import Player from "@/objects/characters/Player";
 import {random} from '@/utils/utils';
+import GameObjectsStore from "@/state/GameObjectsStore";
+import Tile from "@/objects/world/Tile";
 
 enum GeneratorTypes {
     Forest = 'forestGenerator',
@@ -15,13 +17,16 @@ enum GeneratorTypes {
 }
 
 export default class World {
+    private _worldGenerated: boolean = false;
     private _width: number = 0; // number horizontal chunks
     private _height: number = 0; // number vertical chunks
     private _chunkSize: number = 10;
     private _chunks: Chunk[][] = [];
     private _renderChunks: Chunk[] = [];
+    private _currentChunk: Chunk = null;
     private _player: Player;
     private _brain: Brain;
+    private _gameObjectsStore: GameObjectsStore;
     private _chunkGenerators: { [key: string]: ChunkGenerator } = {};
     private _surfaceData: {
         width: number;
@@ -41,10 +46,11 @@ export default class World {
         this._library = Library.getInstance();
         this._canvas = Canvas.getInstance();
         this._bus = EventBus.getInstance();
+        this._gameObjectsStore = GameObjectsStore.getInstance();
         this._width = width;
         this._height = height;
         this._player = player;
-        this._brain = new Brain(this._canvas, [player]);
+        this._brain = new Brain([player]);
         this._surfaceData.height = this._chunkSize - 1;
         this._chunkGenerators['forestGenerator'] = new ForestGenerator();
         this._chunkGenerators['villageGenerator'] = new VillageGenerator();
@@ -53,21 +59,20 @@ export default class World {
         this._bus.subscribe('world:render', this.render.bind(this));
     }
 
-    public async render(): Promise<void> {
-        await this.renderBackground();
-        await this.drawChunks();
-        await this.getVisibleChunks();
-    }
-
     public async update(timestamp: number): Promise<void> {
-        await this._brain.update();
-        await this.render();
+        if (this._worldGenerated) {
+            await this.getVisibleChunks();
+            await this._brain.update();
+            await this.render();
 
-        for (let y = 0; y < this._chunks.length; y++) {
-            for (let x = 0; x < this._chunks[y].length; x++) {
-                await this._chunks[y][x].update(timestamp);
+            for (const chunk of this._renderChunks) {
+                await chunk.update(timestamp);
             }
         }
+    }
+
+    public async render(): Promise<void> {
+        await this.renderBackground();
     }
 
     // нужно определить две переменные: renderX и renderY,
@@ -103,6 +108,7 @@ export default class World {
                     this._player.top() <= endY
                 ) {
                     currentChunk = chunk;
+                    this._currentChunk = chunk;
                 }
 
                 if (currentChunk) {
@@ -200,6 +206,7 @@ export default class World {
                 }
 
                 let newChunk: Chunk = new Chunk(x, y, chunkGenerator);
+
                 chunk.push(newChunk);
             }
 
@@ -209,7 +216,7 @@ export default class World {
     }
 
     // генерация поверхности
-    private surfaceGeneration(chunk: Chunk, first: boolean, last: boolean) {
+    private surfaceGeneration(chunk: Chunk) {
         /* height - устанавливать значение после получение чанка (this.chunkSize) */
         if (chunk === null) {
             return;
@@ -252,41 +259,21 @@ export default class World {
         this._surfaceData.move++;
     }
 
-    private async drawChunks() {
-        for (let chunk of this._renderChunks) {
-            const tiles = chunk.tiles;
-
-            for (let subArr of tiles) {
-                for (let tile of subArr) {
-                    await tile.draw();
-                }
-            }
-        }
-    }
-
-    private processGenerateChunk(): void {
+    private processGenerationChunk(): void {
         let surfaceGenerated: boolean = false;
-        let lastSurfaceChunk: boolean = false;
-        let firstSurfaceChunk: boolean = true;
 
         for (let y = 0; y < this._height; ++y) {
             for (let x = 0; x < this._width; x++) {
-                if (x >= this._width) {
-                    lastSurfaceChunk = true;
-                }
-
                 const chunk = this._chunks[y][x];
                 chunk.createTilesArray();
 
                 if (!surfaceGenerated) {
-                    this.surfaceGeneration(chunk, firstSurfaceChunk, lastSurfaceChunk);
+                    this.surfaceGeneration(chunk);
                 } else {
                     chunk.fillTiles();
                 }
 
                 chunk.runGenerator();
-
-                firstSurfaceChunk = false;
             }
 
             surfaceGenerated = true;
@@ -295,8 +282,18 @@ export default class World {
 
     public async generateWorld() {
         this.createChunksArray();
-        this.processGenerateChunk();
+        this.processGenerationChunk();
+
+        this._worldGenerated = true;
 
         console.log(this._chunks)
+    }
+
+    public get renderChunks(): Chunk[] {
+        return this._renderChunks;
+    }
+
+    public get currentChunk(): Chunk {
+        return this._currentChunk;
     }
 }

@@ -4,16 +4,29 @@ import Canvas from "@/objects/Canvas";
 import GameObjectsStore from "@/state/GameObjectsStore";
 import GameObject from "@/objects/world/GameObject";
 import ChunkGenerator from "@/objects/world/ChunkGenerators/ChunkGenerator";
+import {random} from "@/utils/utils";
+import Enemy from "@/objects/characters/Enemy";
+import {EnemyTypes} from "@/types/game";
+import configEnemy from "@/assets/data/enemies.json";
+import EventBus from "@/EventBus";
+import Character from "../characters/Character";
 
 type tileRowData = {
     indexRow: number;
     heightFilled: number;
 }
 
+type ChunkData = {
+    x: number;
+    y: number;
+    size: number;
+}
+
 export default class Chunk {
     private readonly _id: number = 0;
     private static _staticId: number = 0;
     private _gameObjectStore: GameObjectsStore;
+    private _bus: EventBus;
     private _generator: ChunkGenerator | null;
     private _tiles: Tile[][] = [];
     private _chunkSize: number = 10;
@@ -21,20 +34,15 @@ export default class Chunk {
     private _numberY: number;
     private _library: Library;
     private _canvas: Canvas; // for test
-    private _data: {
-        x: number;
-        y: number;
-        size: number;
-    } = {
+    private _data: ChunkData = {
         x: 0,
         y: 0,
         size: 0
     }
 
-    public visible: boolean = false;
-
     public tileRowData: tileRowData[] = [];
     public objects: GameObject[] = [];
+    public entities: Character[] = [];
     public type: string = 'default';
 
     public constructor(numberX: number, numberY: number, generator: ChunkGenerator) {
@@ -46,10 +54,18 @@ export default class Chunk {
         this._library = Library.getInstance();
         this._canvas = Canvas.getInstance();
         this._gameObjectStore = GameObjectsStore.getInstance();
+        this._bus = EventBus.getInstance();
     }
 
     public async update(timestamp: number) {
+        await this.renderTiles();
         await this.renderObjects();
+
+        for (const entity of this.entities) {
+            if (entity.isUpdate) {
+                await entity.update(timestamp);
+            }
+        }
     }
 
     public createTilesArray(): void {
@@ -87,8 +103,6 @@ export default class Chunk {
             const topTile: Tile = this._tiles[y][this.tileRowData[y].heightFilled];
 
             for (let x = 0; x < this._tiles[y].length; x++) {
-                //const tile: Tile = this._tiles[y][x];
-
                 const currentTile: tileRowData = this.tileRowData[y];
                 const nextTile: tileRowData = this.tileRowData[y + 1];
                 const prevTile: tileRowData = this.tileRowData[y - 1];
@@ -123,6 +137,43 @@ export default class Chunk {
                 }
             }
         }
+
+        this.processEnemies();
+    }
+
+    private processEnemies(): void {
+        const countEnemies = random(3, 1);
+        const filledTiles = [];
+        const enemyTypes: string[] = Object.values(EnemyTypes);
+
+        let randomEnemyName: string = '';
+
+        while (filledTiles.length < countEnemies) {
+            const randomIndexCol: number = random(9, 0);
+            const randomTilesCol = this._tiles[randomIndexCol];
+            const topTile = randomTilesCol[this.tileRowData[randomIndexCol].heightFilled];
+
+            if (filledTiles.includes(topTile.id)) {
+                continue;
+            }
+
+            randomEnemyName = enemyTypes[random(enemyTypes.length - 1, 0)];
+
+            const dataEnemy: any = configEnemy[randomEnemyName];
+            const enemy: Enemy = new Enemy({
+                ...dataEnemy,
+                x: topTile.x,
+                y: topTile.y - 200
+            }, true);
+
+            this.entities.push(enemy);
+
+            //this._gameObjectStore.add(enemy)
+
+            //this._bus.publish('game:addGameEntity', enemy);
+
+            filledTiles.push(topTile.id);
+        }
     }
 
     public fillTiles() {
@@ -134,11 +185,20 @@ export default class Chunk {
         }
     }
 
-    public async renderObjects(): Promise<void> {
+    private async renderObjects(): Promise<void> {
         for (const obj of this.objects) {
             obj.draw();
         }
     }
+
+    private async renderTiles(): Promise<void> {
+        for (const tileRow of this._tiles) {
+            for (const tile of tileRow) {
+                await tile.draw();
+            }
+        }
+    }
+
 
     public runGenerator(): void {
         if (this._generator) {

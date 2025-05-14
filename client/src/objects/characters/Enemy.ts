@@ -5,10 +5,11 @@ import configSpriteEnemies from "@/assets/data-sprites/enemies.json";
 export default class Enemy extends Character implements IEnemy {
     public speed: number = 1.05;
 
-    public constructor(config: any) {
-        super(config.x, config.x, config.w, config.h, true, 'enemy');
+    public constructor(config: any, collidable: boolean) {
+        super(config.x, config.y, config.w, config.h, collidable, 'enemy', config.animations);
 
         this.type = 'enemy';
+        this.name = config.name;
         this.health = config.health;
         this.maxHealth = config.maxHealth;
         this.damage = config.damage;
@@ -23,8 +24,8 @@ export default class Enemy extends Character implements IEnemy {
         });
     }
 
-    public async update(timestamp: number, dt: number): Promise<void> {
-        super.update(timestamp, dt);
+    public async update(timestamp: number): Promise<void> {
+        super.update(timestamp);
 
         this._canvas.drawHealthEnemy({
             x: this.x,

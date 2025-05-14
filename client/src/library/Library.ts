@@ -2,11 +2,9 @@
 import ImageManager from "@/library/ImageManager";
 import AudioManager from "@/library/AudioManager";
 import {SoundEntity} from "@/types/main";
-import tilemap from "@/maps/map.json";
 import Canvas from "@/objects/Canvas";
 import EventBus from "@/EventBus";
 import world from "@/assets/data/world.json";
-import {ForestTreeTypes} from "@/types/game";
 
 type Loaders = AudioManager | ImageManager;
 type TileImage = { [key: string]: ImageManager }
@@ -115,12 +113,12 @@ export default class Library {
                 hurt: this.addLoader(new ImageManager('images/sprites/player/hurt.png')),
                 death: this.addLoader(new ImageManager('images/sprites/player/death.png')),
             },
-            fireWarm: {
-                idle: this.addLoader(new ImageManager('images/sprites/enemies/fire-warm/idle.png')),
-                attack: this.addLoader(new ImageManager('images/sprites/enemies/fire-warm/attack.png')),
-                death: this.addLoader(new ImageManager('images/sprites/enemies/fire-warm/death.png')),
-                walk: this.addLoader(new ImageManager('images/sprites/enemies/fire-warm/walk.png')),
-                hurt: this.addLoader(new ImageManager('images/sprites/enemies/fire-warm/hurt.png'))
+            firewarm: {
+                idle: this.addLoader(new ImageManager('images/sprites/enemies/firewarm/idle.png')),
+                attack: this.addLoader(new ImageManager('images/sprites/enemies/firewarm/attack.png')),
+                death: this.addLoader(new ImageManager('images/sprites/enemies/firewarm/death.png')),
+                walk: this.addLoader(new ImageManager('images/sprites/enemies/firewarm/walk.png')),
+                hurt: this.addLoader(new ImageManager('images/sprites/enemies/firewarm/hurt.png'))
             },
         }
     }

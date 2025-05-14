@@ -13,5 +13,6 @@
   "health": 100,
   "maxHealth": 300,
   "damage": 40,
-  "restoreHealth": 1.5
+  "restoreHealth": 1.5,
+  "animations": ["attack", "hurt", "idle", "run", "jump", "fall"]
 }

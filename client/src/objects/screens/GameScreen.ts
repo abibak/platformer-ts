@@ -5,11 +5,11 @@ export default class GameScreen extends Screen {
 		super();
 	}
 
-	public async render() {
-		//await this.bus.publish('world:render');
-	}
-
 	public async update(): Promise<void> {
 
+	}
+
+	public async render() {
+		
 	}
 }
